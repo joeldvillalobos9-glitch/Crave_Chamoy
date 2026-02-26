@@ -14,6 +14,251 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          parent_id: string | null
+          slug: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          parent_id?: string | null
+          slug: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_adjustments: {
+        Row: {
+          adjusted_by: string
+          created_at: string
+          id: string
+          new_quantity: number
+          previous_quantity: number
+          product_id: string
+          reason: string | null
+        }
+        Insert: {
+          adjusted_by: string
+          created_at?: string
+          id?: string
+          new_quantity: number
+          previous_quantity: number
+          product_id: string
+          reason?: string | null
+        }
+        Update: {
+          adjusted_by?: string
+          created_at?: string
+          id?: string
+          new_quantity?: number
+          previous_quantity?: number
+          product_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_adjustments_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_images: {
+        Row: {
+          alt_text: string | null
+          created_at: string
+          id: string
+          image_url: string
+          product_id: string
+          sort_order: number | null
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string
+          id?: string
+          image_url: string
+          product_id: string
+          sort_order?: number | null
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          product_id?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          allow_backorder: boolean | null
+          candy_type: string | null
+          canonical_url: string | null
+          category_id: string | null
+          collection_featured: boolean | null
+          compare_at_price: number | null
+          cost_price: number | null
+          created_at: string
+          description: string | null
+          flavor_type: string | null
+          frequently_bought_with_ids: string[] | null
+          fruit_type: string | null
+          homepage_eligible: boolean | null
+          id: string
+          is_best_seller: boolean | null
+          is_featured: boolean | null
+          is_limited_edition: boolean | null
+          is_new_arrival: boolean | null
+          is_visible: boolean | null
+          low_stock_threshold: number | null
+          meta_description: string | null
+          meta_title: string | null
+          name: string
+          out_of_stock_behavior: string | null
+          package_size: string | null
+          price: number
+          primary_image_url: string | null
+          related_product_ids: string[] | null
+          short_description: string | null
+          sku: string | null
+          slug: string
+          spice_level: string | null
+          status: Database["public"]["Enums"]["product_status"]
+          stock_quantity: number
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          allow_backorder?: boolean | null
+          candy_type?: string | null
+          canonical_url?: string | null
+          category_id?: string | null
+          collection_featured?: boolean | null
+          compare_at_price?: number | null
+          cost_price?: number | null
+          created_at?: string
+          description?: string | null
+          flavor_type?: string | null
+          frequently_bought_with_ids?: string[] | null
+          fruit_type?: string | null
+          homepage_eligible?: boolean | null
+          id?: string
+          is_best_seller?: boolean | null
+          is_featured?: boolean | null
+          is_limited_edition?: boolean | null
+          is_new_arrival?: boolean | null
+          is_visible?: boolean | null
+          low_stock_threshold?: number | null
+          meta_description?: string | null
+          meta_title?: string | null
+          name: string
+          out_of_stock_behavior?: string | null
+          package_size?: string | null
+          price?: number
+          primary_image_url?: string | null
+          related_product_ids?: string[] | null
+          short_description?: string | null
+          sku?: string | null
+          slug: string
+          spice_level?: string | null
+          status?: Database["public"]["Enums"]["product_status"]
+          stock_quantity?: number
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          allow_backorder?: boolean | null
+          candy_type?: string | null
+          canonical_url?: string | null
+          category_id?: string | null
+          collection_featured?: boolean | null
+          compare_at_price?: number | null
+          cost_price?: number | null
+          created_at?: string
+          description?: string | null
+          flavor_type?: string | null
+          frequently_bought_with_ids?: string[] | null
+          fruit_type?: string | null
+          homepage_eligible?: boolean | null
+          id?: string
+          is_best_seller?: boolean | null
+          is_featured?: boolean | null
+          is_limited_edition?: boolean | null
+          is_new_arrival?: boolean | null
+          is_visible?: boolean | null
+          low_stock_threshold?: number | null
+          meta_description?: string | null
+          meta_title?: string | null
+          name?: string
+          out_of_stock_behavior?: string | null
+          package_size?: string | null
+          price?: number
+          primary_image_url?: string | null
+          related_product_ids?: string[] | null
+          short_description?: string | null
+          sku?: string | null
+          slug?: string
+          spice_level?: string | null
+          status?: Database["public"]["Enums"]["product_status"]
+          stock_quantity?: number
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -74,6 +319,7 @@ export type Database = {
     }
     Enums: {
       app_role: "user" | "admin" | "super_admin"
+      product_status: "draft" | "active" | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -202,6 +448,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["user", "admin", "super_admin"],
+      product_status: ["draft", "active", "archived"],
     },
   },
 } as const

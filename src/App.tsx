@@ -13,12 +13,14 @@ import NotFound from "./pages/NotFound";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminPage from "./pages/admin/AdminPage";
+import ProductsPage from "./pages/admin/ProductsPage";
+import ProductEditorPage from "./pages/admin/ProductEditorPage";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
 const adminPages = [
-  "products", "categories", "inventory", "orders", "customers",
+  "categories", "inventory", "orders", "customers",
   "reviews", "discounts", "loyalty", "referrals", "blog",
   "faq", "policies", "homepage", "seo", "analytics", "audit-log",
 ];
@@ -52,6 +54,8 @@ const App = () => (
               }
             >
               <Route index element={<AdminDashboard />} />
+              <Route path="products" element={<ProductsPage />} />
+              <Route path="products/:id" element={<ProductEditorPage />} />
               {adminPages.map((page) => (
                 <Route key={page} path={page} element={<AdminPage />} />
               ))}
