@@ -61,6 +61,39 @@ export type Database = {
           },
         ]
       }
+      customer_activity: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string | null
+          created_at: string
+          customer_id: string
+          details: string | null
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          customer_id: string
+          details?: string | null
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          customer_id?: string
+          details?: string | null
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
       inventory_adjustments: {
         Row: {
           adjusted_by: string
@@ -98,6 +131,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      loyalty_ledger: {
+        Row: {
+          actor_id: string | null
+          balance_after: number
+          created_at: string
+          customer_id: string
+          description: string | null
+          id: string
+          order_id: string | null
+          points: number
+          type: string
+        }
+        Insert: {
+          actor_id?: string | null
+          balance_after?: number
+          created_at?: string
+          customer_id: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          points?: number
+          type: string
+        }
+        Update: {
+          actor_id?: string | null
+          balance_after?: number
+          created_at?: string
+          customer_id?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          points?: number
+          type?: string
+        }
+        Relationships: []
       }
       order_activity: {
         Row: {
@@ -471,27 +540,90 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          billing_address: Json | null
           created_at: string
           display_name: string | null
           id: string
+          internal_notes: string | null
+          is_vip: boolean | null
+          phone: string | null
+          shipping_address: Json | null
+          tags: string[] | null
           updated_at: string
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
+          billing_address?: Json | null
           created_at?: string
           display_name?: string | null
           id?: string
+          internal_notes?: string | null
+          is_vip?: boolean | null
+          phone?: string | null
+          shipping_address?: Json | null
+          tags?: string[] | null
           updated_at?: string
           user_id: string
         }
         Update: {
           avatar_url?: string | null
+          billing_address?: Json | null
           created_at?: string
           display_name?: string | null
           id?: string
+          internal_notes?: string | null
+          is_vip?: boolean | null
+          phone?: string | null
+          shipping_address?: Json | null
+          tags?: string[] | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          qualifying_order_id: string | null
+          referral_code: string
+          referred_email: string | null
+          referred_id: string | null
+          referred_rewarded: boolean | null
+          referrer_id: string
+          referrer_rewarded: boolean | null
+          reward_amount: number | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          qualifying_order_id?: string | null
+          referral_code: string
+          referred_email?: string | null
+          referred_id?: string | null
+          referred_rewarded?: boolean | null
+          referrer_id: string
+          referrer_rewarded?: boolean | null
+          reward_amount?: number | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          qualifying_order_id?: string | null
+          referral_code?: string
+          referred_email?: string | null
+          referred_id?: string | null
+          referred_rewarded?: boolean | null
+          referrer_id?: string
+          referrer_rewarded?: boolean | null
+          reward_amount?: number | null
+          status?: string
         }
         Relationships: []
       }
