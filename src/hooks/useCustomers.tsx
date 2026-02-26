@@ -18,25 +18,27 @@ export interface CustomerProfile {
 }
 
 export interface CustomerWithStats extends CustomerProfile {
-  email?: string;
+  email: string;
   total_orders: number;
   total_spent: number;
   avg_order_value: number;
   last_order_date: string | null;
   loyalty_balance: number;
   referral_count: number;
+  completed_referrals: number;
+  account_status: "active" | "new" | "inactive";
 }
 
 export interface CustomerFilters {
   search: string;
-  status: "all" | "vip" | "new" | "returning" | "inactive" | "no_orders" | "has_loyalty" | "has_referrals" | "high_value";
+  segment: "all" | "vip" | "new" | "returning" | "inactive" | "no_orders" | "has_loyalty" | "has_referrals" | "high_value" | "recent_signups";
   sort_by: "created_at" | "display_name" | "total_spent" | "total_orders";
   sort_dir: "asc" | "desc";
 }
 
 export const defaultCustomerFilters: CustomerFilters = {
   search: "",
-  status: "all",
+  segment: "all",
   sort_by: "created_at",
   sort_dir: "desc",
 };
@@ -51,18 +53,15 @@ export function useCustomers(filters: CustomerFilters) {
         { ascending: filters.sort_dir === "asc" }
       );
 
-      if (filters.search) {
-        query = query.or(`display_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`);
-      }
-      if (filters.status === "vip") query = query.eq("is_vip", true);
+      if (filters.segment === "vip") query = query.eq("is_vip", true);
 
       const { data: profiles, error } = await query;
       if (error) throw error;
 
-      // Fetch order stats per customer
+      // Fetch all orders for stats + email mapping
       const { data: orders } = await supabase
         .from("orders")
-        .select("customer_id, total, created_at");
+        .select("customer_id, customer_email, total, created_at, coupon_code, loyalty_points_redeemed, referral_reward_used, signup_discount_used");
 
       // Fetch loyalty balances
       const { data: loyaltyData } = await supabase
@@ -75,10 +74,12 @@ export function useCustomers(filters: CustomerFilters) {
         .from("referrals")
         .select("referrer_id, status");
 
-      // Build stats maps
+      // Build email map from orders (customer_id -> email)
+      const emailMap = new Map<string, string>();
       const orderStats = new Map<string, { count: number; total: number; lastDate: string | null }>();
       (orders || []).forEach((o: any) => {
         if (!o.customer_id) return;
+        if (o.customer_email && !emailMap.has(o.customer_id)) emailMap.set(o.customer_id, o.customer_email);
         const existing = orderStats.get(o.customer_id) || { count: 0, total: 0, lastDate: null };
         existing.count++;
         existing.total += Number(o.total);
@@ -91,38 +92,58 @@ export function useCustomers(filters: CustomerFilters) {
         if (!loyaltyMap.has(l.customer_id)) loyaltyMap.set(l.customer_id, l.balance_after);
       });
 
-      const referralMap = new Map<string, number>();
+      const referralMap = new Map<string, { total: number; completed: number }>();
       (referralData || []).forEach((r: any) => {
-        referralMap.set(r.referrer_id, (referralMap.get(r.referrer_id) || 0) + 1);
+        const existing = referralMap.get(r.referrer_id) || { total: 0, completed: 0 };
+        existing.total++;
+        if (r.status === "completed") existing.completed++;
+        referralMap.set(r.referrer_id, existing);
       });
 
-      // Thirty days ago for "new" / "inactive"
       const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+      const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
       const ninetyDaysAgo = new Date(Date.now() - 90 * 86400000).toISOString();
 
       let result: CustomerWithStats[] = (profiles || []).map((p: any) => {
         const stats = orderStats.get(p.user_id) || { count: 0, total: 0, lastDate: null };
+        const refs = referralMap.get(p.user_id) || { total: 0, completed: 0 };
+        const isNew = p.created_at >= thirtyDaysAgo;
+        const isInactive = stats.lastDate ? stats.lastDate < ninetyDaysAgo : p.created_at < ninetyDaysAgo;
         return {
           ...p,
           tags: p.tags || [],
           is_vip: p.is_vip || false,
+          email: emailMap.get(p.user_id) || "",
           total_orders: stats.count,
           total_spent: stats.total,
           avg_order_value: stats.count > 0 ? stats.total / stats.count : 0,
           last_order_date: stats.lastDate,
           loyalty_balance: loyaltyMap.get(p.user_id) || 0,
-          referral_count: referralMap.get(p.user_id) || 0,
+          referral_count: refs.total,
+          completed_referrals: refs.completed,
+          account_status: isNew ? "new" as const : isInactive ? "inactive" as const : "active" as const,
         };
       });
 
-      // Apply client-side filters
-      if (filters.status === "new") result = result.filter((c) => c.created_at >= thirtyDaysAgo);
-      if (filters.status === "returning") result = result.filter((c) => c.total_orders > 1);
-      if (filters.status === "inactive") result = result.filter((c) => !c.last_order_date || c.last_order_date < ninetyDaysAgo);
-      if (filters.status === "no_orders") result = result.filter((c) => c.total_orders === 0);
-      if (filters.status === "has_loyalty") result = result.filter((c) => c.loyalty_balance > 0);
-      if (filters.status === "has_referrals") result = result.filter((c) => c.referral_count > 0);
-      if (filters.status === "high_value") result = result.filter((c) => c.total_spent >= 200);
+      // Search across name, email, phone
+      if (filters.search) {
+        const q = filters.search.toLowerCase();
+        result = result.filter((c) =>
+          (c.display_name || "").toLowerCase().includes(q) ||
+          c.email.toLowerCase().includes(q) ||
+          (c.phone || "").toLowerCase().includes(q)
+        );
+      }
+
+      // Apply segment filters
+      if (filters.segment === "new") result = result.filter((c) => c.created_at >= thirtyDaysAgo);
+      if (filters.segment === "returning") result = result.filter((c) => c.total_orders > 1);
+      if (filters.segment === "inactive") result = result.filter((c) => c.account_status === "inactive");
+      if (filters.segment === "no_orders") result = result.filter((c) => c.total_orders === 0);
+      if (filters.segment === "has_loyalty") result = result.filter((c) => c.loyalty_balance > 0);
+      if (filters.segment === "has_referrals") result = result.filter((c) => c.referral_count > 0);
+      if (filters.segment === "high_value") result = result.filter((c) => c.total_spent >= 200);
+      if (filters.segment === "recent_signups") result = result.filter((c) => c.created_at >= sevenDaysAgo);
 
       // Sort by computed fields
       if (filters.sort_by === "total_spent") {

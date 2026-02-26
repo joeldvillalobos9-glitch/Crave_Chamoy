@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   ArrowLeft, Crown, Gift, UserPlus, ShoppingCart, Plus, Minus,
-  MessageSquare, Tag, Clock, DollarSign, TrendingUp, Edit2, Save,
+  Tag, Clock, DollarSign, TrendingUp, Edit2, Save, AlertTriangle,
+  Zap, Heart, Repeat, Ticket,
 } from "lucide-react";
 import {
   useCustomerProfile, useCustomerOrders, useCustomerLoyalty,
@@ -19,10 +20,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 
 const statusStyle: Record<string, string> = {
   pending: "bg-yellow-500/15 text-yellow-700 border-yellow-500/30",
@@ -48,7 +45,6 @@ const CustomerDetailPage = () => {
   const { data: activity = [] } = useCustomerActivity(id);
   const { updateProfile, addActivity, addLoyaltyEntry } = useCustomerMutations();
 
-  const [noteText, setNoteText] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [pointsAmount, setPointsAmount] = useState("");
   const [pointsReason, setPointsReason] = useState("");
@@ -66,6 +62,24 @@ const CustomerDetailPage = () => {
   const avgOrder = orders.length > 0 ? totalSpent / orders.length : 0;
   const loyaltyBalance = loyalty.length > 0 ? loyalty[0].balance_after : 0;
   const completedReferrals = referrals.filter((r: any) => r.status === "completed").length;
+  const pendingReferrals = referrals.filter((r: any) => r.status === "pending").length;
+  const customerEmail = orders.length > 0 ? orders[0].customer_email : "";
+
+  // Business insight signals
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 86400000).toISOString();
+  const isNew = profile.created_at >= thirtyDaysAgo;
+  const isReturning = orders.length > 1;
+  const lastOrderDate = orders.length > 0 ? orders[0].created_at : null;
+  const isInactive = !lastOrderDate || lastOrderDate < ninetyDaysAgo;
+  const isHighValue = totalSpent >= 200;
+  const isReferralActive = completedReferrals > 0;
+
+  // Discount usage from orders
+  const couponsUsed = orders.filter((o: any) => o.coupon_code).map((o: any) => o.coupon_code);
+  const signupDiscountUsed = orders.some((o: any) => o.signup_discount_used);
+  const loyaltyOrdersCount = orders.filter((o: any) => Number(o.loyalty_points_redeemed) > 0).length;
+  const referralOrdersCount = orders.filter((o: any) => o.referral_reward_used).length;
 
   const toggleVip = () => {
     updateProfile.mutate({ userId: profile.user_id, data: { is_vip: !profile.is_vip } });
@@ -136,22 +150,35 @@ const CustomerDetailPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" asChild>
+      <div className="flex items-start gap-3">
+        <Button variant="ghost" size="icon" asChild className="mt-1">
           <Link to="/admin/customers"><ArrowLeft size={18} /></Link>
         </Button>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-display font-bold text-foreground">
               {profile.display_name || "Unnamed Customer"}
             </h1>
-            {profile.is_vip && <Crown size={18} className="text-yellow-500" />}
+            {profile.is_vip && <Crown size={18} className="text-secondary" />}
           </div>
-          <p className="text-sm text-muted-foreground">
-            Customer since {new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-          </p>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5 flex-wrap">
+            {customerEmail && <span>{customerEmail}</span>}
+            {customerEmail && profile.phone && <span>·</span>}
+            {profile.phone && <span>{profile.phone}</span>}
+            <span>·</span>
+            <span>Joined {new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}</span>
+          </div>
+          {/* Insight badges */}
+          <div className="flex gap-1.5 mt-2 flex-wrap">
+            {profile.is_vip && <Badge variant="outline" className="text-[10px] bg-secondary/15 text-secondary border-secondary/30 gap-1"><Crown size={10} /> VIP</Badge>}
+            {isNew && <Badge variant="outline" className="text-[10px] bg-blue-500/15 text-blue-700 border-blue-500/30 gap-1"><Zap size={10} /> New Customer</Badge>}
+            {isReturning && <Badge variant="outline" className="text-[10px] bg-green-500/15 text-green-700 border-green-500/30 gap-1"><Repeat size={10} /> Returning</Badge>}
+            {isHighValue && <Badge variant="outline" className="text-[10px] bg-purple-500/15 text-purple-700 border-purple-500/30 gap-1"><DollarSign size={10} /> High Value</Badge>}
+            {isReferralActive && <Badge variant="outline" className="text-[10px] bg-accent/15 text-accent border-accent/30 gap-1"><Heart size={10} /> Referral Active</Badge>}
+            {isInactive && !isNew && <Badge variant="outline" className="text-[10px] bg-muted text-muted-foreground border-border gap-1"><AlertTriangle size={10} /> Inactive</Badge>}
+          </div>
         </div>
-        <Button variant={profile.is_vip ? "outline" : "default"} size="sm" onClick={toggleVip} className="gap-1.5">
+        <Button variant={profile.is_vip ? "outline" : "default"} size="sm" onClick={toggleVip} className="gap-1.5 shrink-0">
           <Crown size={14} /> {profile.is_vip ? "Remove VIP" : "Mark VIP"}
         </Button>
       </div>
@@ -192,16 +219,18 @@ const CustomerDetailPage = () => {
             <UserPlus size={20} className="mx-auto text-muted-foreground mb-1" />
             <p className="text-2xl font-bold text-foreground">{completedReferrals}</p>
             <p className="text-xs text-muted-foreground">Referrals</p>
+            {pendingReferrals > 0 && <p className="text-[10px] text-muted-foreground">{pendingReferrals} pending</p>}
           </CardContent>
         </Card>
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="orders" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="orders">Orders</TabsTrigger>
           <TabsTrigger value="loyalty">Chamoy Points</TabsTrigger>
           <TabsTrigger value="referrals">Referrals</TabsTrigger>
+          <TabsTrigger value="discounts">Discounts</TabsTrigger>
           <TabsTrigger value="profile">Profile & Notes</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
@@ -209,7 +238,14 @@ const CustomerDetailPage = () => {
         {/* Orders Tab */}
         <TabsContent value="orders">
           <Card>
-            <CardHeader><CardTitle className="text-lg">Order History</CardTitle></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-lg">Order History</CardTitle>
+              {orders.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Last order: {new Date(orders[0].created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                </p>
+              )}
+            </CardHeader>
             <CardContent>
               {orders.length === 0 ? (
                 <p className="text-muted-foreground text-sm">No orders yet.</p>
@@ -241,8 +277,9 @@ const CustomerDetailPage = () => {
                         <TableCell className="text-right text-sm text-muted-foreground">{o.item_count}</TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            {o.loyalty_points_redeemed > 0 && <Badge variant="secondary" className="text-[10px]">🎯 Points</Badge>}
+                            {Number(o.loyalty_points_redeemed) > 0 && <Badge variant="secondary" className="text-[10px]">🎯 Points</Badge>}
                             {o.referral_reward_used && <Badge variant="secondary" className="text-[10px]">🤝 Referral</Badge>}
+                            {o.coupon_code && <Badge variant="secondary" className="text-[10px]">🏷️ {o.coupon_code}</Badge>}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -278,7 +315,7 @@ const CustomerDetailPage = () => {
                   </Dialog>
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button size="sm" variant="outline" className="gap-1"><Minus size={14} /> Subtract Points</Button>
+                      <Button size="sm" variant="outline" className="gap-1"><Minus size={14} /> Subtract</Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader><DialogTitle>Subtract Chamoy Points</DialogTitle></DialogHeader>
@@ -320,7 +357,7 @@ const CustomerDetailPage = () => {
                           <TableCell>
                             <Badge variant="secondary" className="text-xs capitalize">{formatLabel(l.type)}</Badge>
                           </TableCell>
-                          <TableCell className={`text-right text-sm font-medium ${l.points >= 0 ? "text-green-600" : "text-red-600"}`}>
+                          <TableCell className={`text-right text-sm font-medium ${l.points >= 0 ? "text-green-600" : "text-destructive"}`}>
                             {l.points >= 0 ? "+" : ""}{l.points}
                           </TableCell>
                           <TableCell className="text-right text-sm">{l.balance_after}</TableCell>
@@ -338,7 +375,14 @@ const CustomerDetailPage = () => {
         {/* Referrals Tab */}
         <TabsContent value="referrals">
           <Card>
-            <CardHeader><CardTitle className="text-lg">Referral Activity</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-lg">Referral Activity</CardTitle>
+              <div className="flex gap-4 text-sm text-muted-foreground mt-1">
+                <span>{completedReferrals} completed</span>
+                <span>{pendingReferrals} pending</span>
+                <span>${(completedReferrals * 10).toFixed(2)} earned</span>
+              </div>
+            </CardHeader>
             <CardContent>
               {referrals.length === 0 ? (
                 <p className="text-muted-foreground text-sm">No referral activity.</p>
@@ -348,6 +392,7 @@ const CustomerDetailPage = () => {
                     <TableRow>
                       <TableHead>Date</TableHead>
                       <TableHead>Referred</TableHead>
+                      <TableHead>Code</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Reward</TableHead>
                       <TableHead>Rewarded</TableHead>
@@ -360,10 +405,11 @@ const CustomerDetailPage = () => {
                           {new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                         </TableCell>
                         <TableCell className="text-sm">{r.referred_email || "—"}</TableCell>
+                        <TableCell className="text-sm font-mono text-muted-foreground">{r.referral_code}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className={`text-xs capitalize ${
                             r.status === "completed" ? "bg-green-500/15 text-green-700 border-green-500/30" :
-                            r.status === "reversed" ? "bg-red-500/15 text-red-700 border-red-500/30" :
+                            r.status === "reversed" ? "bg-destructive/15 text-destructive border-destructive/30" :
                             "bg-yellow-500/15 text-yellow-700 border-yellow-500/30"
                           }`}>{formatLabel(r.status)}</Badge>
                         </TableCell>
@@ -378,26 +424,93 @@ const CustomerDetailPage = () => {
           </Card>
         </TabsContent>
 
+        {/* Discounts Tab */}
+        <TabsContent value="discounts">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader><CardTitle className="text-lg">Discount Usage Summary</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between py-2 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <Ticket size={16} className="text-muted-foreground" />
+                    <span className="text-sm text-foreground">First-Order Discount</span>
+                  </div>
+                  <Badge variant={signupDiscountUsed ? "secondary" : "outline"} className="text-xs">
+                    {signupDiscountUsed ? "Used" : "Not Used"}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <Gift size={16} className="text-muted-foreground" />
+                    <span className="text-sm text-foreground">Orders with Loyalty Points</span>
+                  </div>
+                  <span className="text-sm font-medium text-foreground">{loyaltyOrdersCount}</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <UserPlus size={16} className="text-muted-foreground" />
+                    <span className="text-sm text-foreground">Orders with Referral Reward</span>
+                  </div>
+                  <span className="text-sm font-medium text-foreground">{referralOrdersCount}</span>
+                </div>
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-2">
+                    <Tag size={16} className="text-muted-foreground" />
+                    <span className="text-sm text-foreground">Coupons Used</span>
+                  </div>
+                  <span className="text-sm font-medium text-foreground">{couponsUsed.length}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle className="text-lg">Coupon History</CardTitle></CardHeader>
+              <CardContent>
+                {couponsUsed.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">No coupons used.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {[...new Set(couponsUsed)].map((code) => {
+                      const count = couponsUsed.filter((c: string) => c === code).length;
+                      return (
+                        <div key={code} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                          <span className="text-sm font-mono text-foreground">{code}</span>
+                          <Badge variant="secondary" className="text-xs">{count}× used</Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
         {/* Profile & Notes Tab */}
         <TabsContent value="profile">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Profile Info */}
             <Card>
               <CardHeader><CardTitle className="text-lg">Profile Information</CardTitle></CardHeader>
               <CardContent className="space-y-3">
-                <div>
-                  <label className="text-xs text-muted-foreground font-medium">Name</label>
-                  <p className="text-sm text-foreground">{profile.display_name || "—"}</p>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground font-medium">Phone</label>
-                  <p className="text-sm text-foreground">{profile.phone || "—"}</p>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground font-medium">Account Created</label>
-                  <p className="text-sm text-foreground">
-                    {new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                  </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground font-medium">Name</label>
+                    <p className="text-sm text-foreground">{profile.display_name || "—"}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground font-medium">Email</label>
+                    <p className="text-sm text-foreground">{customerEmail || "—"}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground font-medium">Phone</label>
+                    <p className="text-sm text-foreground">{profile.phone || "—"}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground font-medium">Account Created</label>
+                    <p className="text-sm text-foreground">
+                      {new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                    </p>
+                  </div>
                 </div>
                 {profile.shipping_address && (
                   <div>
@@ -409,21 +522,33 @@ const CustomerDetailPage = () => {
                     </p>
                   </div>
                 )}
+                {profile.billing_address && (
+                  <div>
+                    <label className="text-xs text-muted-foreground font-medium">Billing Address</label>
+                    <p className="text-sm text-foreground whitespace-pre-line">
+                      {typeof profile.billing_address === "object"
+                        ? Object.values(profile.billing_address).filter(Boolean).join(", ")
+                        : String(profile.billing_address)}
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Tags */}
             <Card>
               <CardHeader><CardTitle className="text-lg">Tags & Labels</CardTitle></CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex flex-wrap gap-1.5">
-                  {profile.is_vip && <Badge className="bg-yellow-500/15 text-yellow-700 border-yellow-500/30">VIP</Badge>}
+                  {profile.is_vip && <Badge variant="outline" className="bg-secondary/15 text-secondary border-secondary/30">VIP</Badge>}
                   {(profile.tags || []).map((tag: string) => (
                     <Badge key={tag} variant="secondary" className="gap-1">
                       {tag}
                       <button onClick={() => removeTag(tag)} className="ml-1 text-muted-foreground hover:text-foreground">×</button>
                     </Badge>
                   ))}
+                  {!profile.is_vip && (profile.tags || []).length === 0 && (
+                    <p className="text-sm text-muted-foreground">No tags yet.</p>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <Input
@@ -440,7 +565,6 @@ const CustomerDetailPage = () => {
               </CardContent>
             </Card>
 
-            {/* Internal Notes */}
             <Card className="lg:col-span-2">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">Internal Notes</CardTitle>

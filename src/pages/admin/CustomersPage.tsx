@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Search, Users, ArrowUpDown, Crown, Star, Gift, UserPlus,
-  ShoppingCart, TrendingUp, MoreHorizontal,
+  Search, Users, ArrowUpDown, Crown, MoreHorizontal,
 } from "lucide-react";
 import {
-  useCustomers, defaultCustomerFilters, type CustomerFilters, type CustomerWithStats,
+  useCustomers, defaultCustomerFilters, type CustomerFilters,
 } from "@/hooks/useCustomers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +16,12 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const PAGE_SIZE = 25;
+
+const acctStatusStyle: Record<string, string> = {
+  active: "bg-green-500/15 text-green-700 border-green-500/30",
+  new: "bg-blue-500/15 text-blue-700 border-blue-500/30",
+  inactive: "bg-muted text-muted-foreground border-border",
+};
 
 const CustomersPage = () => {
   const [filters, setFilters] = useState<CustomerFilters>(defaultCustomerFilters);
@@ -53,24 +58,25 @@ const CustomersPage = () => {
           <div className="relative flex-1">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by name or phone..."
+              placeholder="Search by name, email, or phone..."
               value={filters.search}
               onChange={(e) => { setFilters({ ...filters, search: e.target.value }); setPage(0); }}
               className="pl-9"
             />
           </div>
-          <Select value={filters.status} onValueChange={(v: any) => { setFilters({ ...filters, status: v }); setPage(0); }}>
-            <SelectTrigger className="w-[180px]"><SelectValue placeholder="All Customers" /></SelectTrigger>
+          <Select value={filters.segment} onValueChange={(v: any) => { setFilters({ ...filters, segment: v }); setPage(0); }}>
+            <SelectTrigger className="w-[200px]"><SelectValue placeholder="All Customers" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Customers</SelectItem>
-              <SelectItem value="vip">VIP Customers</SelectItem>
-              <SelectItem value="new">New (30 days)</SelectItem>
-              <SelectItem value="returning">Returning</SelectItem>
-              <SelectItem value="inactive">Inactive (90+ days)</SelectItem>
-              <SelectItem value="no_orders">No Orders</SelectItem>
-              <SelectItem value="has_loyalty">Has Chamoy Points</SelectItem>
-              <SelectItem value="has_referrals">Has Referrals</SelectItem>
-              <SelectItem value="high_value">High Value ($200+)</SelectItem>
+              <SelectItem value="vip">⭐ VIP Customers</SelectItem>
+              <SelectItem value="new">🆕 New (30 days)</SelectItem>
+              <SelectItem value="recent_signups">📅 Recent Signups (7 days)</SelectItem>
+              <SelectItem value="returning">🔄 Returning</SelectItem>
+              <SelectItem value="inactive">💤 Inactive (90+ days)</SelectItem>
+              <SelectItem value="no_orders">🚫 No Orders</SelectItem>
+              <SelectItem value="has_loyalty">🎯 Has Chamoy Points</SelectItem>
+              <SelectItem value="has_referrals">🤝 Has Referrals</SelectItem>
+              <SelectItem value="high_value">💎 High Value ($200+)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -94,7 +100,7 @@ const CustomersPage = () => {
                     <TableHead className="cursor-pointer select-none" onClick={() => handleSort("display_name")}>
                       Customer <SortIcon col="display_name" />
                     </TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Account</TableHead>
                     <TableHead className="text-right cursor-pointer select-none" onClick={() => handleSort("total_orders")}>
                       Orders <SortIcon col="total_orders" />
                     </TableHead>
@@ -123,18 +129,19 @@ const CustomersPage = () => {
                             <div>
                               <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
                                 {c.display_name || "Unnamed"}
-                                {c.is_vip && <Crown size={13} className="text-yellow-500" />}
+                                {c.is_vip && <Crown size={13} className="text-secondary" />}
                               </p>
-                              {c.phone && <p className="text-xs text-muted-foreground">{c.phone}</p>}
+                              <p className="text-xs text-muted-foreground">{c.email || c.phone || "—"}</p>
                             </div>
                           </div>
                         </Link>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1 flex-wrap">
-                          {c.is_vip && <Badge variant="outline" className="text-[10px] bg-yellow-500/15 text-yellow-700 border-yellow-500/30">VIP</Badge>}
-                          {c.total_orders > 1 && <Badge variant="secondary" className="text-[10px]">Returning</Badge>}
-                          {c.total_orders === 0 && <Badge variant="outline" className="text-[10px] text-muted-foreground">No orders</Badge>}
+                          <Badge variant="outline" className={`text-[10px] capitalize ${acctStatusStyle[c.account_status]}`}>
+                            {c.account_status}
+                          </Badge>
+                          {c.is_vip && <Badge variant="outline" className="text-[10px] bg-secondary/15 text-secondary border-secondary/30">VIP</Badge>}
                         </div>
                       </TableCell>
                       <TableCell className="text-right text-sm font-medium">{c.total_orders}</TableCell>
