@@ -1,9 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, Search, User, Menu, X, Heart } from "lucide-react";
+import { ShoppingBag, Search, User, Menu, X, Heart, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
 import logo from "@/assets/logo.jpg";
 
 const navLinks = [
@@ -18,6 +19,7 @@ const Header = () => {
   const { itemCount } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   return (
     <>
@@ -69,11 +71,17 @@ const Header = () => {
                 <Heart size={20} />
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" className="hidden md:flex text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10" asChild>
-              <Link to="/account" aria-label="Account">
-                <User size={20} />
-              </Link>
-            </Button>
+            {user ? (
+              <Button variant="ghost" size="icon" className="hidden md:flex text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10" onClick={signOut} aria-label="Sign out">
+                <LogOut size={20} />
+              </Button>
+            ) : (
+              <Button variant="ghost" size="icon" className="hidden md:flex text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10" asChild>
+                <Link to="/auth" aria-label="Sign in">
+                  <User size={20} />
+                </Link>
+              </Button>
+            )}
             <Button variant="ghost" size="icon" className="relative text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10" asChild>
               <Link to="/cart" aria-label="Cart">
                 <ShoppingBag size={20} />
@@ -110,7 +118,11 @@ const Header = () => {
                   </Link>
                 ))}
                 <div className="flex gap-4 pt-2 border-t border-primary-foreground/10">
-                  <Link to="/account" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-primary-foreground/60 hover:text-secondary">Account</Link>
+                  {user ? (
+                    <button onClick={() => { signOut(); setMobileOpen(false); }} className="text-sm font-medium text-primary-foreground/60 hover:text-secondary">Sign Out</button>
+                  ) : (
+                    <Link to="/auth" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-primary-foreground/60 hover:text-secondary">Sign In</Link>
+                  )}
                   <Link to="/wishlist" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-primary-foreground/60 hover:text-secondary">Wishlist</Link>
                 </div>
               </div>
