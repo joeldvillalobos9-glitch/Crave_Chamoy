@@ -99,6 +99,215 @@ export type Database = {
           },
         ]
       }
+      order_activity: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string | null
+          created_at: string
+          details: string | null
+          id: string
+          metadata: Json | null
+          order_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          metadata?: Json | null
+          order_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          metadata?: Json | null
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_activity_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_items: {
+        Row: {
+          created_at: string
+          discount_amount: number | null
+          id: string
+          image_url: string | null
+          order_id: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          sku: string | null
+          subtotal: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          discount_amount?: number | null
+          id?: string
+          image_url?: string | null
+          order_id: string
+          product_id?: string | null
+          product_name: string
+          quantity?: number
+          sku?: string | null
+          subtotal?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          discount_amount?: number | null
+          id?: string
+          image_url?: string | null
+          order_id?: string
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          sku?: string | null
+          subtotal?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          billing_address: Json | null
+          coupon_code: string | null
+          created_at: string
+          customer_email: string
+          customer_id: string | null
+          customer_name: string
+          customer_notes: string | null
+          customer_phone: string | null
+          discount_amount: number | null
+          discount_breakdown: Json | null
+          discounts_stacked: boolean | null
+          fulfillment_status: Database["public"]["Enums"]["fulfillment_status"]
+          id: string
+          internal_notes: string | null
+          item_count: number | null
+          loyalty_discount: number | null
+          loyalty_points_earned: number | null
+          loyalty_points_redeemed: number | null
+          order_number: string
+          payment_method: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          referral_discount: number | null
+          referral_reward_used: boolean | null
+          referral_triggered: boolean | null
+          refund_amount: number | null
+          shipping_address: Json | null
+          shipping_cost: number | null
+          signup_discount_used: boolean | null
+          status: Database["public"]["Enums"]["order_status"]
+          subtotal: number
+          tax_amount: number | null
+          total: number
+          tracking_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          billing_address?: Json | null
+          coupon_code?: string | null
+          created_at?: string
+          customer_email: string
+          customer_id?: string | null
+          customer_name: string
+          customer_notes?: string | null
+          customer_phone?: string | null
+          discount_amount?: number | null
+          discount_breakdown?: Json | null
+          discounts_stacked?: boolean | null
+          fulfillment_status?: Database["public"]["Enums"]["fulfillment_status"]
+          id?: string
+          internal_notes?: string | null
+          item_count?: number | null
+          loyalty_discount?: number | null
+          loyalty_points_earned?: number | null
+          loyalty_points_redeemed?: number | null
+          order_number: string
+          payment_method?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          referral_discount?: number | null
+          referral_reward_used?: boolean | null
+          referral_triggered?: boolean | null
+          refund_amount?: number | null
+          shipping_address?: Json | null
+          shipping_cost?: number | null
+          signup_discount_used?: boolean | null
+          status?: Database["public"]["Enums"]["order_status"]
+          subtotal?: number
+          tax_amount?: number | null
+          total?: number
+          tracking_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          billing_address?: Json | null
+          coupon_code?: string | null
+          created_at?: string
+          customer_email?: string
+          customer_id?: string | null
+          customer_name?: string
+          customer_notes?: string | null
+          customer_phone?: string | null
+          discount_amount?: number | null
+          discount_breakdown?: Json | null
+          discounts_stacked?: boolean | null
+          fulfillment_status?: Database["public"]["Enums"]["fulfillment_status"]
+          id?: string
+          internal_notes?: string | null
+          item_count?: number | null
+          loyalty_discount?: number | null
+          loyalty_points_earned?: number | null
+          loyalty_points_redeemed?: number | null
+          order_number?: string
+          payment_method?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          referral_discount?: number | null
+          referral_reward_used?: boolean | null
+          referral_triggered?: boolean | null
+          refund_amount?: number | null
+          shipping_address?: Json | null
+          shipping_cost?: number | null
+          signup_discount_used?: boolean | null
+          status?: Database["public"]["Enums"]["order_status"]
+          subtotal?: number
+          tax_amount?: number | null
+          total?: number
+          tracking_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_images: {
         Row: {
           alt_text: string | null
@@ -319,6 +528,26 @@ export type Database = {
     }
     Enums: {
       app_role: "user" | "admin" | "super_admin"
+      fulfillment_status:
+        | "unfulfilled"
+        | "packed"
+        | "shipped"
+        | "delivered"
+        | "returned"
+      order_status:
+        | "pending"
+        | "confirmed"
+        | "processing"
+        | "completed"
+        | "canceled"
+        | "refunded"
+        | "partially_refunded"
+      payment_status:
+        | "unpaid"
+        | "paid"
+        | "refunded"
+        | "partially_refunded"
+        | "failed"
       product_status: "draft" | "active" | "archived"
     }
     CompositeTypes: {
@@ -448,6 +677,29 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["user", "admin", "super_admin"],
+      fulfillment_status: [
+        "unfulfilled",
+        "packed",
+        "shipped",
+        "delivered",
+        "returned",
+      ],
+      order_status: [
+        "pending",
+        "confirmed",
+        "processing",
+        "completed",
+        "canceled",
+        "refunded",
+        "partially_refunded",
+      ],
+      payment_status: [
+        "unpaid",
+        "paid",
+        "refunded",
+        "partially_refunded",
+        "failed",
+      ],
       product_status: ["draft", "active", "archived"],
     },
   },
