@@ -12,7 +12,7 @@ const faqs = [
 
 const HomeFAQ = () => {
   return (
-    <section className="py-16 md:py-24 bg-background">
+    <section className="py-16 md:py-24 gradient-section-dark">
       <div className="container max-w-3xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -20,19 +20,19 @@ const HomeFAQ = () => {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <span className="text-sm font-body font-semibold text-primary uppercase tracking-wider">Got Questions?</span>
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mt-2">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/20 text-primary-foreground text-sm font-body font-semibold uppercase tracking-wider border border-primary-foreground/10">Got Questions?</span>
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-primary-foreground mt-4">
             Frequently Asked Questions
           </h2>
         </motion.div>
 
         <Accordion type="single" collapsible className="space-y-3">
           {faqs.map((faq, i) => (
-            <AccordionItem key={i} value={`faq-${i}`} className="bg-card rounded-xl border border-border px-6 shadow-card">
-              <AccordionTrigger className="text-left font-display font-semibold text-foreground hover:text-primary py-4">
+            <AccordionItem key={i} value={`faq-${i}`} className="bg-chamoy-dark/40 backdrop-blur-sm rounded-xl border border-primary-foreground/10 px-6">
+              <AccordionTrigger className="text-left font-display font-semibold text-primary-foreground hover:text-secondary py-4">
                 {faq.q}
               </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground font-body pb-4">
+              <AccordionContent className="text-primary-foreground/70 font-body pb-4">
                 {faq.a}
               </AccordionContent>
             </AccordionItem>

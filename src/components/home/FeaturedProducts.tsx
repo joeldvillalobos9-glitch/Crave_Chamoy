@@ -8,7 +8,7 @@ const FeaturedProducts = () => {
   const featured = products.slice(0, 4);
 
   return (
-    <section className="py-16 md:py-24 bg-background">
+    <section className="py-16 md:py-24 gradient-section-warm">
       <div className="container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -16,8 +16,8 @@ const FeaturedProducts = () => {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <span className="text-sm font-body font-semibold text-primary uppercase tracking-wider">Our Favorites</span>
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mt-2">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-body font-semibold uppercase tracking-wider border border-primary/20">Our Favorites</span>
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mt-4">
             Best Sellers 🔥
           </h2>
           <p className="text-muted-foreground font-body mt-3 max-w-md mx-auto">
@@ -40,7 +40,7 @@ const FeaturedProducts = () => {
         </div>
 
         <div className="text-center mt-10">
-          <Button variant="outline" size="lg" asChild>
+          <Button variant="candy" size="lg" asChild>
             <Link to="/shop">View All Products →</Link>
           </Button>
         </div>

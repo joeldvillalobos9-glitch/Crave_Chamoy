@@ -6,10 +6,10 @@
 
 @layer base {
   :root {
-    --background: 40 30% 97%;
+    --background: 30 25% 95%;
     --foreground: 0 0% 8%;
 
-    --card: 0 0% 100%;
+    --card: 30 20% 98%;
     --card-foreground: 0 0% 8%;
 
     --popover: 0 0% 100%;
@@ -21,7 +21,7 @@
     --secondary: 25 95% 55%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 30 20% 93%;
+    --muted: 30 25% 90%;
     --muted-foreground: 0 0% 40%;
 
     --accent: 340 80% 52%;
@@ -30,8 +30,8 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 15% 88%;
-    --input: 30 15% 88%;
+    --border: 30 20% 85%;
+    --input: 30 20% 85%;
     --ring: 355 85% 48%;
 
     --radius: 0.75rem;
@@ -48,6 +48,11 @@
     --gradient-candy: linear-gradient(135deg, hsl(355 85% 48%), hsl(25 95% 55%));
     --gradient-lime: linear-gradient(135deg, hsl(85 65% 48%), hsl(85 65% 38%));
     --gradient-dark: linear-gradient(135deg, hsl(0 0% 8%), hsl(0 80% 15%));
+    --gradient-warm: linear-gradient(180deg, hsl(30 30% 94%), hsl(30 20% 90%));
+    --gradient-cream: linear-gradient(180deg, hsl(30 25% 95%), hsl(40 30% 97%));
+    --gradient-section-dark: linear-gradient(135deg, hsl(0 0% 10%), hsl(355 50% 12%));
+    --gradient-section-warm: linear-gradient(135deg, hsl(25 40% 92%), hsl(340 30% 93%));
+    --gradient-section-pink: linear-gradient(135deg, hsl(340 40% 94%), hsl(355 35% 92%));
 
     --shadow-candy: 0 4px 20px -4px hsl(355 85% 48% / 0.3);
     --shadow-glow: 0 0 30px hsl(355 85% 48% / 0.2);
@@ -121,6 +126,21 @@
   }
   .gradient-dark {
     background: var(--gradient-dark);
+  }
+  .gradient-warm {
+    background: var(--gradient-warm);
+  }
+  .gradient-cream {
+    background: var(--gradient-cream);
+  }
+  .gradient-section-dark {
+    background: var(--gradient-section-dark);
+  }
+  .gradient-section-warm {
+    background: var(--gradient-section-warm);
+  }
+  .gradient-section-pink {
+    background: var(--gradient-section-pink);
   }
   .shadow-candy {
     box-shadow: var(--shadow-candy);
