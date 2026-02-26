@@ -31,7 +31,7 @@ const Header = () => {
       </div>
 
       <header className="sticky top-0 z-50 bg-chamoy-dark/95 backdrop-blur-md border-b border-primary-foreground/10">
-        <div className="container flex items-center justify-between h-16 md:h-20">
+        <div className="container flex items-center justify-between h-18 md:h-22">
           {/* Mobile menu toggle */}
           <button
             className="md:hidden p-2 text-primary-foreground"
@@ -41,9 +41,9 @@ const Header = () => {
             {mobileOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
 
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="CraveChamoy - Rich Sweet Spicy Lime Chili candy" className="h-12 md:h-14 w-auto object-contain" />
+          {/* Logo — larger, more dominant */}
+          <Link to="/" className="flex items-center -my-1">
+            <img src={logo} alt="CraveChamoy" className="h-14 md:h-[4.5rem] w-auto object-contain drop-shadow-[0_2px_8px_rgba(220,38,38,0.2)]" />
           </Link>
 
           {/* Desktop nav */}
