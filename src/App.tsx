@@ -15,12 +15,14 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminPage from "./pages/admin/AdminPage";
 import ProductsPage from "./pages/admin/ProductsPage";
 import ProductEditorPage from "./pages/admin/ProductEditorPage";
+import OrdersPage from "./pages/admin/OrdersPage";
+import OrderDetailPage from "./pages/admin/OrderDetailPage";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
 const adminPages = [
-  "categories", "inventory", "orders", "customers",
+  "categories", "inventory", "customers",
   "reviews", "discounts", "loyalty", "referrals", "blog",
   "faq", "policies", "homepage", "seo", "analytics", "audit-log",
 ];
@@ -56,6 +58,8 @@ const App = () => (
               <Route index element={<AdminDashboard />} />
               <Route path="products" element={<ProductsPage />} />
               <Route path="products/:id" element={<ProductEditorPage />} />
+              <Route path="orders" element={<OrdersPage />} />
+              <Route path="orders/:id" element={<OrderDetailPage />} />
               {adminPages.map((page) => (
                 <Route key={page} path={page} element={<AdminPage />} />
               ))}
