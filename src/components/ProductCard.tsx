@@ -15,9 +15,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      className="group bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-shadow duration-300"
+      className="group bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-shadow duration-300 border border-border/50"
     >
-      <Link to={`/product/${product.slug}`} className="block relative aspect-square overflow-hidden bg-muted">
+      <Link to={`/product/${product.slug}`} className="block relative aspect-square overflow-hidden">
         <img
           src={product.image}
           alt={product.name}
@@ -25,10 +25,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
           loading="lazy"
         />
         {product.badge && (
-          <span className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold font-body text-primary-foreground ${
+          <span className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold font-body text-primary-foreground shadow-candy ${
             product.badge === "Sale" ? "bg-secondary" :
             product.badge === "New" ? "gradient-lime" :
-            "bg-primary"
+            "gradient-candy"
           }`}>
             {product.badge}
           </span>
@@ -37,7 +37,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
       <div className="p-4">
         <Link to={`/product/${product.slug}`}>
-          <p className="text-xs font-body text-muted-foreground mb-1">{product.category}</p>
+          <p className="text-xs font-body text-primary/80 font-semibold mb-1 uppercase tracking-wide">{product.category}</p>
           <h3 className="font-display font-semibold text-base text-foreground leading-tight mb-2 group-hover:text-primary transition-colors">
             {product.name}
           </h3>
@@ -66,7 +66,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <Button
             variant="default"
             size="icon"
-            className="rounded-full h-9 w-9"
+            className="rounded-full h-9 w-9 shadow-candy"
             onClick={(e) => {
               e.preventDefault();
               addItem(product);

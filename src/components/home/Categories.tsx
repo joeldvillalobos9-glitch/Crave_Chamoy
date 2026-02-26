@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 const Categories = () => {
   return (
-    <section className="py-16 md:py-24 bg-muted/50">
+    <section className="py-16 md:py-24 gradient-section-dark">
       <div className="container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -12,8 +12,8 @@ const Categories = () => {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <span className="text-sm font-body font-semibold text-primary uppercase tracking-wider">Browse By</span>
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mt-2">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/20 text-primary-foreground text-sm font-body font-semibold uppercase tracking-wider border border-primary-foreground/10">Browse By</span>
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-primary-foreground mt-4">
             Categories 🍬
           </h2>
         </motion.div>
@@ -29,14 +29,14 @@ const Categories = () => {
             >
               <Link
                 to={`/shop?category=${cat.slug}`}
-                className="block bg-card rounded-2xl p-6 text-center shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 group"
+                className="block bg-chamoy-dark/60 backdrop-blur-sm rounded-2xl p-6 text-center border border-primary-foreground/10 hover:border-primary/40 hover:-translate-y-1 transition-all duration-300 group"
               >
                 <span className="text-4xl block mb-3">{cat.emoji}</span>
-                <h3 className="font-display font-semibold text-foreground group-hover:text-primary transition-colors">
+                <h3 className="font-display font-semibold text-primary-foreground group-hover:text-secondary transition-colors">
                   {cat.name}
                 </h3>
                 {cat.count > 0 && (
-                  <p className="text-xs text-muted-foreground font-body mt-1">{cat.count} products</p>
+                  <p className="text-xs text-primary-foreground/50 font-body mt-1">{cat.count} products</p>
                 )}
               </Link>
             </motion.div>

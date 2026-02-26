@@ -28,11 +28,11 @@ const Header = () => {
         </p>
       </div>
 
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
+      <header className="sticky top-0 z-50 bg-chamoy-dark/95 backdrop-blur-md border-b border-primary-foreground/10">
         <div className="container flex items-center justify-between h-16 md:h-20">
           {/* Mobile menu toggle */}
           <button
-            className="md:hidden p-2 text-foreground"
+            className="md:hidden p-2 text-primary-foreground"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
           >
@@ -41,7 +41,7 @@ const Header = () => {
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="CraveChamoy - Rich Sweet Spicy Lime Chili candy" className="h-12 md:h-16 w-auto object-contain" />
+            <img src={logo} alt="CraveChamoy - Rich Sweet Spicy Lime Chili candy" className="h-12 md:h-14 w-auto object-contain" />
           </Link>
 
           {/* Desktop nav */}
@@ -50,8 +50,8 @@ const Header = () => {
               <Link
                 key={link.href}
                 to={link.href}
-                className={`text-sm font-semibold font-body transition-colors hover:text-primary ${
-                  location.pathname === link.href ? "text-primary" : "text-foreground"
+                className={`text-sm font-semibold font-body transition-colors hover:text-secondary ${
+                  location.pathname === link.href ? "text-secondary" : "text-primary-foreground/80"
                 }`}
               >
                 {link.label}
@@ -61,24 +61,24 @@ const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="hidden md:flex" aria-label="Search">
+            <Button variant="ghost" size="icon" className="hidden md:flex text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10" aria-label="Search">
               <Search size={20} />
             </Button>
-            <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
+            <Button variant="ghost" size="icon" className="hidden md:flex text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10" asChild>
               <Link to="/wishlist" aria-label="Wishlist">
                 <Heart size={20} />
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
+            <Button variant="ghost" size="icon" className="hidden md:flex text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10" asChild>
               <Link to="/account" aria-label="Account">
                 <User size={20} />
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" className="relative" asChild>
+            <Button variant="ghost" size="icon" className="relative text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10" asChild>
               <Link to="/cart" aria-label="Cart">
                 <ShoppingBag size={20} />
                 {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-secondary text-primary-foreground text-xs font-bold flex items-center justify-center">
                     {itemCount}
                   </span>
                 )}
@@ -94,7 +94,7 @@ const Header = () => {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="md:hidden overflow-hidden border-t border-border bg-card"
+              className="md:hidden overflow-hidden border-t border-primary-foreground/10 bg-chamoy-dark"
             >
               <div className="container py-4 flex flex-col gap-3">
                 {navLinks.map((link) => (
@@ -102,16 +102,16 @@ const Header = () => {
                     key={link.href}
                     to={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className={`text-base font-semibold font-body py-2 transition-colors hover:text-primary ${
-                      location.pathname === link.href ? "text-primary" : "text-foreground"
+                    className={`text-base font-semibold font-body py-2 transition-colors hover:text-secondary ${
+                      location.pathname === link.href ? "text-secondary" : "text-primary-foreground/80"
                     }`}
                   >
                     {link.label}
                   </Link>
                 ))}
-                <div className="flex gap-4 pt-2 border-t border-border">
-                  <Link to="/account" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground hover:text-primary">Account</Link>
-                  <Link to="/wishlist" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground hover:text-primary">Wishlist</Link>
+                <div className="flex gap-4 pt-2 border-t border-primary-foreground/10">
+                  <Link to="/account" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-primary-foreground/60 hover:text-secondary">Account</Link>
+                  <Link to="/wishlist" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-primary-foreground/60 hover:text-secondary">Wishlist</Link>
                 </div>
               </div>
             </motion.nav>
