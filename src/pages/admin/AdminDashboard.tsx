@@ -24,8 +24,8 @@ const quickLinks = [
   { title: "Reviews", desc: "Customer reviews", icon: Star, url: "/admin/reviews" },
   { title: "Blog", desc: "Manage blog posts", icon: FileText, url: "/admin/blog" },
   { title: "FAQ", desc: "Manage FAQs", icon: HelpCircle, url: "/admin/faq" },
-  { title: "Homepage", desc: "Edit homepage content", icon: Palette, url: "/admin/homepage" },
-  { title: "SEO", desc: "Search optimization", icon: Search, url: "/admin/seo" },
+  { title: "Pages & Content", desc: "Manage site pages", icon: Palette, url: "/admin/homepage" },
+  { title: "SEO Manager", desc: "Search optimization", icon: Search, url: "/admin/seo" },
   { title: "Audit Log", desc: "Activity history", icon: ClipboardList, url: "/admin/audit-log" },
 ];
 
