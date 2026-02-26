@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import logo from "@/assets/logo.jpg";
 
 const footerLinks = {
   Shop: [
@@ -35,7 +36,7 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <span className="text-2xl font-display font-bold">CraveChamoy</span>
+            <img src={logo} alt="CraveChamoy" className="h-14 w-auto object-contain brightness-110" />
             <p className="mt-3 text-sm opacity-80 font-body leading-relaxed">
               Bold chamoy candy made with real chamoy sauce. Sweet, spicy, tangy perfection. 🌶️🍬
             </p>
