@@ -10,8 +10,23 @@ import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminPage from "./pages/admin/AdminPage";
+import ProtectedRoute from "./components/admin/ProtectedRoute";
 
 const queryClient = new QueryClient();
+
+const adminPages = [
+  "products", "categories", "inventory", "orders", "customers",
+  "reviews", "discounts", "loyalty", "referrals", "blog",
+  "faq", "policies", "homepage", "seo", "analytics", "audit-log",
+];
+
+const superAdminPages = [
+  "accounts", "roles", "settings", "loyalty-rules",
+  "referral-rules", "discount-rules", "integrations", "global-controls",
+];
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -26,6 +41,25 @@ const App = () => (
             <Route path="/product/:slug" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/auth" element={<Auth />} />
+
+            {/* Admin routes */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              {adminPages.map((page) => (
+                <Route key={page} path={page} element={<AdminPage />} />
+              ))}
+              {superAdminPages.map((page) => (
+                <Route key={page} path={page} element={<AdminPage />} />
+              ))}
+            </Route>
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

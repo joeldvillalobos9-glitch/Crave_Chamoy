@@ -1,10 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, Search, User, Menu, X, Heart, LogOut } from "lucide-react";
+import { ShoppingBag, Search, User, Menu, X, Heart, LogOut, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 import logo from "@/assets/logo.jpg";
 
 const navLinks = [
@@ -20,6 +21,7 @@ const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { isAdmin, isSuperAdmin } = useUserRole();
 
   return (
     <>
@@ -73,6 +75,14 @@ const Header = () => {
             </Button>
             {user ? (
               <div className="hidden md:flex items-center gap-2 ml-1">
+                {isAdmin && (
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-secondary hover:text-secondary hover:bg-secondary/10 font-body" asChild>
+                    <Link to="/admin">
+                      <LayoutDashboard size={16} />
+                      <span className="text-xs font-bold">Dashboard</span>
+                    </Link>
+                  </Button>
+                )}
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 border border-primary/25">
                   <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                     <span className="text-xs font-bold text-primary-foreground">
@@ -130,6 +140,16 @@ const Header = () => {
                     {link.label}
                   </Link>
                 ))}
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 py-2 text-secondary font-semibold font-body"
+                  >
+                    <LayoutDashboard size={18} />
+                    Admin Dashboard
+                  </Link>
+                )}
                 <div className="flex flex-col gap-3 pt-2 border-t border-primary-foreground/10">
                   {user ? (
                     <div className="flex items-center justify-between">
