@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import heroBanner from "@/assets/hero-banner.jpg";
+import logo from "@/assets/logo.jpg";
 
 const Hero = () => {
   return (
@@ -23,10 +24,8 @@ const Hero = () => {
           transition={{ duration: 0.7 }}
           className="max-w-xl"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/20 text-primary-foreground text-sm font-body font-semibold mb-6 backdrop-blur-sm border border-primary-foreground/20">
-            🌶️ Sweet • Spicy • Tangy
-          </span>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-primary-foreground leading-tight mb-6">
+          <img src={logo} alt="CraveChamoy - Rich Sweet Spicy Lime Chili candy" className="h-28 md:h-36 lg:h-44 w-auto object-contain mb-6 drop-shadow-2xl" />
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-primary-foreground leading-tight mb-6">
             Chamoy Candy
             <br />
             <span className="text-secondary">You'll Crave</span>

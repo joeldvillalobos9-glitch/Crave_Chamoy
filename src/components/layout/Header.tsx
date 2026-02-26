@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import logo from "@/assets/logo.jpg";
 
 const navLinks = [
   { label: "Shop", href: "/shop" },
@@ -40,9 +41,7 @@ const Header = () => {
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-2xl md:text-3xl font-display font-bold text-gradient-candy">
-              CraveChamoy
-            </span>
+            <img src={logo} alt="CraveChamoy - Rich Sweet Spicy Lime Chili candy" className="h-12 md:h-16 w-auto object-contain" />
           </Link>
 
           {/* Desktop nav */}
