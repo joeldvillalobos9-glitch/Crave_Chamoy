@@ -17,6 +17,7 @@ import ProductsPage from "./pages/admin/ProductsPage";
 import ProductEditorPage from "./pages/admin/ProductEditorPage";
 import OrdersPage from "./pages/admin/OrdersPage";
 import OrderDetailPage from "./pages/admin/OrderDetailPage";
+import CreateOrderPage from "./pages/admin/CreateOrderPage";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,7 @@ const App = () => (
               <Route path="products" element={<ProductsPage />} />
               <Route path="products/:id" element={<ProductEditorPage />} />
               <Route path="orders" element={<OrdersPage />} />
+              <Route path="orders/new" element={<CreateOrderPage />} />
               <Route path="orders/:id" element={<OrderDetailPage />} />
               {adminPages.map((page) => (
                 <Route key={page} path={page} element={<AdminPage />} />

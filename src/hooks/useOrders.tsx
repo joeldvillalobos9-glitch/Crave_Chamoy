@@ -75,6 +75,11 @@ export interface OrderFilters {
   has_discount: "all" | "yes";
   has_loyalty: "all" | "yes";
   has_referral: "all" | "yes";
+  date_from: string;
+  date_to: string;
+  min_total: string;
+  sort_by: "created_at" | "total" | "order_number";
+  sort_dir: "asc" | "desc";
 }
 
 export const defaultOrderFilters: OrderFilters = {
@@ -85,6 +90,11 @@ export const defaultOrderFilters: OrderFilters = {
   has_discount: "all",
   has_loyalty: "all",
   has_referral: "all",
+  date_from: "",
+  date_to: "",
+  min_total: "",
+  sort_by: "created_at",
+  sort_dir: "desc",
 };
 
 export function useOrders(filters: OrderFilters) {
@@ -94,7 +104,7 @@ export function useOrders(filters: OrderFilters) {
       let query = supabase
         .from("orders")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order(filters.sort_by, { ascending: filters.sort_dir === "asc" });
 
       if (filters.search) {
         query = query.or(`order_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%,customer_email.ilike.%${filters.search}%`);
@@ -105,6 +115,9 @@ export function useOrders(filters: OrderFilters) {
       if (filters.has_discount === "yes") query = query.gt("discount_amount", 0);
       if (filters.has_loyalty === "yes") query = query.gt("loyalty_points_redeemed", 0);
       if (filters.has_referral === "yes") query = query.eq("referral_reward_used", true);
+      if (filters.date_from) query = query.gte("created_at", filters.date_from);
+      if (filters.date_to) query = query.lte("created_at", filters.date_to + "T23:59:59");
+      if (filters.min_total) query = query.gte("total", Number(filters.min_total));
 
       const { data, error } = await query;
       if (error) throw error;
@@ -149,6 +162,24 @@ export function useOrderActivity(orderId: string | undefined) {
   });
 }
 
+export function useCustomerHistory(customerId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["customer-history", customerId],
+    enabled: !!customerId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("id, order_number, total, status, created_at")
+        .eq("customer_id", customerId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const orders = data || [];
+      const totalSpent = orders.reduce((s, o) => s + Number(o.total), 0);
+      return { orders, totalSpent, orderCount: orders.length };
+    },
+  });
+}
+
 export function useOrderMutations() {
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -187,5 +218,24 @@ export function useOrderMutations() {
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
-  return { updateOrder, addActivity, bulkUpdateOrders };
+  const createOrder = useMutation({
+    mutationFn: async (order: Partial<Order> & { items?: Partial<OrderItem>[] }) => {
+      const { items, ...orderData } = order;
+      const { data, error } = await supabase.from("orders").insert(orderData as any).select().single();
+      if (error) throw error;
+      if (items && items.length > 0) {
+        const itemsWithOrderId = items.map((i) => ({ ...i, order_id: data.id }));
+        const { error: itemsError } = await supabase.from("order_items").insert(itemsWithOrderId as any);
+        if (itemsError) throw itemsError;
+      }
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-orders"] });
+      toast({ title: "Order created" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  return { updateOrder, addActivity, bulkUpdateOrders, createOrder };
 }

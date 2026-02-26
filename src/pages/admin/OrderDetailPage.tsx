@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Truck, Package, CheckCircle2, XCircle, RefreshCw, Printer, MessageSquare, Clock, Gift, Users, Tag, DollarSign, MapPin, Mail, Phone, User } from "lucide-react";
-import { useOrder, useOrderItems, useOrderActivity, useOrderMutations, type OrderStatus, type PaymentStatus, type FulfillmentStatus } from "@/hooks/useOrders";
+import {
+  ArrowLeft, Truck, Package, CheckCircle2, XCircle, RefreshCw, Printer,
+  MessageSquare, Clock, Gift, Users, Tag, DollarSign, MapPin, Mail, Phone,
+  User, FileText, ShoppingBag, History,
+} from "lucide-react";
+import {
+  useOrder, useOrderItems, useOrderActivity, useOrderMutations, useCustomerHistory,
+  type OrderStatus, type PaymentStatus, type FulfillmentStatus,
+} from "@/hooks/useOrders";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +16,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const statusStyle: Record<string, string> = {
   pending: "bg-yellow-500/15 text-yellow-700", confirmed: "bg-blue-500/15 text-blue-700",
@@ -26,12 +38,28 @@ const statusStyle: Record<string, string> = {
 
 function formatLabel(s: string) { return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()); }
 
+function printContent(title: string, html: string) {
+  const w = window.open("", "_blank");
+  if (!w) return;
+  w.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>
+    body{font-family:system-ui,sans-serif;padding:24px;font-size:13px;color:#1a1a1a}
+    h1{font-size:20px;margin-bottom:4px} h2{font-size:15px;margin-top:20px;margin-bottom:8px;border-bottom:1px solid #ddd;padding-bottom:4px}
+    table{width:100%;border-collapse:collapse;margin-top:8px} th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #eee}
+    th{font-weight:600;font-size:11px;text-transform:uppercase;color:#666} .right{text-align:right}
+    .muted{color:#888} .total-row td{font-weight:600;border-top:2px solid #333}
+    @media print{body{padding:0}}
+  </style></head><body>${html}</body></html>`);
+  w.document.close();
+  w.print();
+}
+
 const OrderDetailPage = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const { data: order, isLoading } = useOrder(id);
   const { data: items = [] } = useOrderItems(id);
   const { data: activity = [] } = useOrderActivity(id);
+  const { data: customerHistory } = useCustomerHistory(order?.customer_id);
   const { updateOrder, addActivity } = useOrderMutations();
   const [noteText, setNoteText] = useState("");
   const [trackingInput, setTrackingInput] = useState("");
@@ -39,23 +67,17 @@ const OrderDetailPage = () => {
 
   if (isLoading || !order) return <div className="p-12 text-center text-muted-foreground">Loading order...</div>;
 
+  const actorName = user?.email?.split("@")[0] || "Admin";
+  const actorId = user?.id || null;
+
   const handleStatusChange = (field: string, value: string) => {
     updateOrder.mutate({ id: order.id, data: { [field]: value } as any });
-    addActivity.mutate({
-      order_id: order.id, actor_id: user?.id || null,
-      actor_name: user?.email?.split("@")[0] || "Admin",
-      action: `${field.replace(/_/g, " ")} changed`,
-      details: `Changed to ${formatLabel(value)}`, metadata: { field, value },
-    });
+    addActivity.mutate({ order_id: order.id, actor_id: actorId, actor_name: actorName, action: `${field.replace(/_/g, " ")} changed`, details: `Changed to ${formatLabel(value)}`, metadata: { field, value } });
   };
 
   const handleAddNote = () => {
     if (!noteText.trim()) return;
-    addActivity.mutate({
-      order_id: order.id, actor_id: user?.id || null,
-      actor_name: user?.email?.split("@")[0] || "Admin",
-      action: "Note added", details: noteText, metadata: {},
-    });
+    addActivity.mutate({ order_id: order.id, actor_id: actorId, actor_name: actorName, action: "Note added", details: noteText, metadata: {} });
     updateOrder.mutate({ id: order.id, data: { internal_notes: (order.internal_notes ? order.internal_notes + "\n" : "") + noteText } as any });
     setNoteText("");
   };
@@ -63,11 +85,7 @@ const OrderDetailPage = () => {
   const handleTrackingUpdate = () => {
     if (!trackingInput.trim()) return;
     updateOrder.mutate({ id: order.id, data: { tracking_number: trackingInput } as any });
-    addActivity.mutate({
-      order_id: order.id, actor_id: user?.id || null,
-      actor_name: user?.email?.split("@")[0] || "Admin",
-      action: "Tracking updated", details: `Tracking: ${trackingInput}`, metadata: { tracking_number: trackingInput },
-    });
+    addActivity.mutate({ order_id: order.id, actor_id: actorId, actor_name: actorName, action: "Tracking updated", details: `Tracking: ${trackingInput}`, metadata: { tracking_number: trackingInput } });
     setTrackingInput("");
   };
 
@@ -75,29 +93,35 @@ const OrderDetailPage = () => {
     const amount = full ? Number(order.total) : Number(refundAmount);
     if (!amount || amount <= 0) return;
     const newStatus = (full || amount >= Number(order.total)) ? "refunded" : "partially_refunded";
-    updateOrder.mutate({
-      id: order.id,
-      data: { status: newStatus, payment_status: newStatus, refund_amount: Number(order.refund_amount || 0) + amount } as any,
-    });
-    addActivity.mutate({
-      order_id: order.id, actor_id: user?.id || null,
-      actor_name: user?.email?.split("@")[0] || "Admin",
-      action: full ? "Full refund issued" : "Partial refund issued",
-      details: `$${amount.toFixed(2)} refunded`, metadata: { amount },
-    });
+    updateOrder.mutate({ id: order.id, data: { status: newStatus, payment_status: newStatus, refund_amount: Number(order.refund_amount || 0) + amount } as any });
+    addActivity.mutate({ order_id: order.id, actor_id: actorId, actor_name: actorName, action: full ? "Full refund issued" : "Partial refund issued", details: `$${amount.toFixed(2)} refunded`, metadata: { amount } });
     setRefundAmount("");
   };
 
   const handleCancel = () => {
     updateOrder.mutate({ id: order.id, data: { status: "canceled" } as any });
-    addActivity.mutate({
-      order_id: order.id, actor_id: user?.id || null,
-      actor_name: user?.email?.split("@")[0] || "Admin",
-      action: "Order canceled", details: "Order was canceled by admin", metadata: {},
-    });
+    addActivity.mutate({ order_id: order.id, actor_id: actorId, actor_name: actorName, action: "Order canceled", details: "Order was canceled by admin", metadata: {} });
   };
 
   const addr = order.shipping_address;
+  const billAddr = order.billing_address;
+
+  const buildPackingSlipHtml = () => {
+    const addrLines = addr ? [addr.line1, addr.line2, [addr.city, addr.state, addr.zip].filter(Boolean).join(", "), addr.country].filter(Boolean).join("<br/>") : "N/A";
+    const itemRows = items.map((i) => `<tr><td>${i.product_name}</td><td>${i.sku || "—"}</td><td class="right">${i.quantity}</td></tr>`).join("");
+    return `<h1>Packing Slip</h1><p class="muted">${order.order_number} · ${new Date(order.created_at).toLocaleDateString()}</p>
+      <h2>Ship To</h2><p>${order.customer_name}<br/>${addrLines}</p>
+      <h2>Items</h2><table><thead><tr><th>Product</th><th>SKU</th><th class="right">Qty</th></tr></thead><tbody>${itemRows}</tbody></table>
+      <p style="margin-top:24px" class="muted">Total items: ${items.reduce((s, i) => s + i.quantity, 0)}</p>`;
+  };
+
+  const buildOrderSummaryHtml = () => {
+    const itemRows = items.map((i) => `<tr><td>${i.product_name}</td><td>${i.sku || "—"}</td><td class="right">${i.quantity}</td><td class="right">$${Number(i.unit_price).toFixed(2)}</td><td class="right">$${Number(i.subtotal).toFixed(2)}</td></tr>`).join("");
+    return `<h1>Order Summary</h1><p class="muted">${order.order_number} · ${new Date(order.created_at).toLocaleDateString()}</p>
+      <h2>Customer</h2><p>${order.customer_name}<br/>${order.customer_email}</p>
+      <h2>Items</h2><table><thead><tr><th>Product</th><th>SKU</th><th class="right">Qty</th><th class="right">Unit</th><th class="right">Subtotal</th></tr></thead><tbody>${itemRows}
+      <tr class="total-row"><td colspan="4">Total</td><td class="right">$${Number(order.total).toFixed(2)}</td></tr></tbody></table>`;
+  };
 
   return (
     <div className="space-y-6 max-w-6xl">
@@ -113,13 +137,16 @@ const OrderDetailPage = () => {
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.print()}>
-            <Printer size={14} /> Print
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => printContent("Packing Slip - " + order.order_number, buildPackingSlipHtml())}>
+            <Package size={14} /> Packing Slip
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => printContent("Order Summary - " + order.order_number, buildOrderSummaryHtml())}>
+            <Printer size={14} /> Print Summary
           </Button>
           {order.status !== "canceled" && order.status !== "refunded" && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1.5 text-destructive border-destructive/30"><XCircle size={14} /> Cancel Order</Button>
+                <Button variant="outline" size="sm" className="gap-1.5 text-destructive border-destructive/30"><XCircle size={14} /> Cancel</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -136,15 +163,16 @@ const OrderDetailPage = () => {
         </div>
       </div>
 
-      {/* Status badges row */}
+      {/* Status badges */}
       <div className="flex flex-wrap gap-3">
         <Badge className={`text-sm px-3 py-1 ${statusStyle[order.status]}`}>Order: {formatLabel(order.status)}</Badge>
         <Badge className={`text-sm px-3 py-1 ${statusStyle[order.payment_status]}`}>Payment: {formatLabel(order.payment_status)}</Badge>
         <Badge className={`text-sm px-3 py-1 ${statusStyle[order.fulfillment_status]}`}>Fulfillment: {formatLabel(order.fulfillment_status)}</Badge>
+        {Number(order.refund_amount) > 0 && <Badge className="text-sm px-3 py-1 bg-red-500/15 text-red-700">Refunded: ${Number(order.refund_amount).toFixed(2)}</Badge>}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left column: main content */}
+        {/* Left column */}
         <div className="lg:col-span-2 space-y-6">
           {/* Order Items */}
           <div className="bg-card rounded-xl border border-border overflow-hidden">
@@ -182,7 +210,7 @@ const OrderDetailPage = () => {
             </div>
           </div>
 
-          {/* Loyalty & Referral & Discounts */}
+          {/* Rewards & Discounts */}
           {(order.loyalty_points_earned > 0 || order.loyalty_points_redeemed > 0 || order.referral_reward_used || order.coupon_code || order.signup_discount_used) && (
             <div className="bg-card rounded-xl border border-border p-4 space-y-3">
               <h2 className="font-semibold text-foreground">Rewards & Discounts</h2>
@@ -225,6 +253,15 @@ const OrderDetailPage = () => {
                 )}
               </div>
               {order.discounts_stacked && <p className="text-xs text-muted-foreground">⚡ Multiple discounts were stacked on this order</p>}
+              {(order.status === "refunded" || order.status === "canceled") && (order.loyalty_points_earned > 0 || order.referral_triggered) && (
+                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                  <p className="text-sm font-medium text-destructive">⚠️ Reward Reversal Needed</p>
+                  <ul className="text-xs text-destructive/80 mt-1 space-y-0.5">
+                    {order.loyalty_points_earned > 0 && <li>• {order.loyalty_points_earned} loyalty points should be reversed</li>}
+                    {order.referral_triggered && <li>• Referral reward triggered by this order should be reversed</li>}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 
@@ -234,7 +271,7 @@ const OrderDetailPage = () => {
             {activity.length === 0 ? (
               <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-[400px] overflow-y-auto">
                 {activity.map((a) => (
                   <div key={a.id} className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
@@ -258,14 +295,14 @@ const OrderDetailPage = () => {
               <div className="flex gap-2">
                 <Textarea value={noteText} onChange={(e) => setNoteText(e.target.value)} rows={2} placeholder="Write a note about this order..." className="flex-1" />
                 <Button size="sm" onClick={handleAddNote} disabled={!noteText.trim()} className="self-end gap-1.5">
-                  <MessageSquare size={14} /> Add Note
+                  <MessageSquare size={14} /> Add
                 </Button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right column: sidebar */}
+        {/* Right column */}
         <div className="space-y-6">
           {/* Status controls */}
           <div className="bg-card rounded-xl border border-border p-4 space-y-4">
@@ -311,7 +348,7 @@ const OrderDetailPage = () => {
           <div className="bg-card rounded-xl border border-border p-4 space-y-3">
             <h2 className="font-semibold text-foreground">Shipping & Tracking</h2>
             {order.tracking_number && (
-              <div className="p-2 rounded bg-muted text-sm font-mono">{order.tracking_number}</div>
+              <div className="p-2 rounded bg-muted text-sm font-mono break-all">{order.tracking_number}</div>
             )}
             <div className="flex gap-2">
               <Input value={trackingInput} onChange={(e) => setTrackingInput(e.target.value)} placeholder="Enter tracking number" className="text-sm" />
@@ -334,7 +371,11 @@ const OrderDetailPage = () => {
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Issue full refund?</AlertDialogTitle>
-                    <AlertDialogDescription>This will refund ${Number(order.total).toFixed(2)}. Loyalty points earned from this order should be manually reversed.</AlertDialogDescription>
+                    <AlertDialogDescription>
+                      This will refund ${Number(order.total).toFixed(2)}.
+                      {order.loyalty_points_earned > 0 && ` ${order.loyalty_points_earned} loyalty points should be manually reversed.`}
+                      {order.referral_triggered && " The referral reward triggered by this order should be reversed."}
+                    </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -373,11 +414,16 @@ const OrderDetailPage = () => {
                 </div>
               )}
             </div>
-            {addr && (
-              <>
-                <Separator />
-                <div className="space-y-1">
-                  <div className="flex items-start gap-2 text-sm text-muted-foreground">
+
+            {/* Addresses */}
+            <Tabs defaultValue="shipping" className="mt-2">
+              <TabsList className="w-full">
+                <TabsTrigger value="shipping" className="flex-1 text-xs">Shipping</TabsTrigger>
+                <TabsTrigger value="billing" className="flex-1 text-xs">Billing</TabsTrigger>
+              </TabsList>
+              <TabsContent value="shipping">
+                {addr ? (
+                  <div className="flex items-start gap-2 text-sm text-muted-foreground pt-2">
                     <MapPin size={14} className="mt-0.5 shrink-0" />
                     <div>
                       {addr.line1 && <p>{addr.line1}</p>}
@@ -386,9 +432,23 @@ const OrderDetailPage = () => {
                       {addr.country && <p>{addr.country}</p>}
                     </div>
                   </div>
-                </div>
-              </>
-            )}
+                ) : <p className="text-sm text-muted-foreground pt-2">No shipping address</p>}
+              </TabsContent>
+              <TabsContent value="billing">
+                {billAddr ? (
+                  <div className="flex items-start gap-2 text-sm text-muted-foreground pt-2">
+                    <MapPin size={14} className="mt-0.5 shrink-0" />
+                    <div>
+                      {billAddr.line1 && <p>{billAddr.line1}</p>}
+                      {billAddr.line2 && <p>{billAddr.line2}</p>}
+                      {(billAddr.city || billAddr.state || billAddr.zip) && <p>{[billAddr.city, billAddr.state, billAddr.zip].filter(Boolean).join(", ")}</p>}
+                      {billAddr.country && <p>{billAddr.country}</p>}
+                    </div>
+                  </div>
+                ) : <p className="text-sm text-muted-foreground pt-2">Same as shipping</p>}
+              </TabsContent>
+            </Tabs>
+
             {order.customer_notes && (
               <>
                 <Separator />
@@ -405,6 +465,34 @@ const OrderDetailPage = () => {
               </>
             )}
           </div>
+
+          {/* Customer History */}
+          {customerHistory && customerHistory.orderCount > 0 && (
+            <div className="bg-card rounded-xl border border-border p-4 space-y-3">
+              <h2 className="font-semibold text-foreground flex items-center gap-2"><History size={16} /> Customer History</h2>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg bg-muted/50 text-center">
+                  <p className="text-lg font-bold text-foreground">{customerHistory.orderCount}</p>
+                  <p className="text-xs text-muted-foreground">Total Orders</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/50 text-center">
+                  <p className="text-lg font-bold text-foreground">${customerHistory.totalSpent.toFixed(2)}</p>
+                  <p className="text-xs text-muted-foreground">Lifetime Value</p>
+                </div>
+              </div>
+              {customerHistory.orderCount > 1 && (
+                <Badge variant="secondary" className="text-xs">🔄 Repeat Customer</Badge>
+              )}
+              <div className="space-y-1 max-h-[150px] overflow-y-auto">
+                {customerHistory.orders.filter((o) => o.id !== order.id).slice(0, 5).map((o) => (
+                  <Link key={o.id} to={`/admin/orders/${o.id}`} className="flex justify-between text-xs p-1.5 rounded hover:bg-muted/50">
+                    <span className="font-mono text-primary">{o.order_number}</span>
+                    <span className="text-muted-foreground">${Number(o.total).toFixed(2)}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
