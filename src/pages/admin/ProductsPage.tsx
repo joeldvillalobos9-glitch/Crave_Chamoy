@@ -105,10 +105,10 @@ const ProductsPage = () => {
             </SelectContent>
           </Select>
           <Select value={filters.featured} onValueChange={(v: any) => setFilters({ ...filters, featured: v })}>
-            <SelectTrigger className="w-[130px]"><SelectValue placeholder="Featured" /></SelectTrigger>
+            <SelectTrigger className="w-[140px]"><SelectValue placeholder="Featured" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="yes">Featured</SelectItem>
+              <SelectItem value="all">All Featured</SelectItem>
+              <SelectItem value="yes">Featured Only</SelectItem>
               <SelectItem value="no">Not Featured</SelectItem>
             </SelectContent>
           </Select>
