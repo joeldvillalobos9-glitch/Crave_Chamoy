@@ -72,13 +72,26 @@ const Header = () => {
               </Link>
             </Button>
             {user ? (
-              <Button variant="ghost" size="icon" className="hidden md:flex text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10" onClick={signOut} aria-label="Sign out">
-                <LogOut size={20} />
-              </Button>
+              <div className="hidden md:flex items-center gap-2 ml-1">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 border border-primary/25">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                    <span className="text-xs font-bold text-primary-foreground">
+                      {user.email?.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="text-xs font-semibold text-primary-foreground/90 max-w-[100px] truncate font-body">
+                    {user.user_metadata?.display_name || user.email?.split("@")[0]}
+                  </span>
+                </div>
+                <Button variant="ghost" size="icon" className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10" onClick={signOut} aria-label="Sign out">
+                  <LogOut size={18} />
+                </Button>
+              </div>
             ) : (
-              <Button variant="ghost" size="icon" className="hidden md:flex text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10" asChild>
-                <Link to="/auth" aria-label="Sign in">
-                  <User size={20} />
+              <Button variant="ghost" size="sm" className="hidden md:flex items-center gap-1.5 text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 font-body" asChild>
+                <Link to="/auth">
+                  <User size={18} />
+                  <span className="text-xs font-semibold">Sign In</span>
                 </Link>
               </Button>
             )}
@@ -117,11 +130,23 @@ const Header = () => {
                     {link.label}
                   </Link>
                 ))}
-                <div className="flex gap-4 pt-2 border-t border-primary-foreground/10">
+                <div className="flex flex-col gap-3 pt-2 border-t border-primary-foreground/10">
                   {user ? (
-                    <button onClick={() => { signOut(); setMobileOpen(false); }} className="text-sm font-medium text-primary-foreground/60 hover:text-secondary">Sign Out</button>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                          <span className="text-xs font-bold text-primary-foreground">
+                            {user.email?.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <span className="text-sm font-semibold text-primary-foreground/80 font-body">
+                          {user.user_metadata?.display_name || user.email?.split("@")[0]}
+                        </span>
+                      </div>
+                      <button onClick={() => { signOut(); setMobileOpen(false); }} className="text-sm font-medium text-primary-foreground/50 hover:text-secondary">Sign Out</button>
+                    </div>
                   ) : (
-                    <Link to="/auth" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-primary-foreground/60 hover:text-secondary">Sign In</Link>
+                    <Link to="/auth" onClick={() => setMobileOpen(false)} className="text-sm font-semibold text-secondary hover:text-secondary/80 font-body">Sign In / Create Account</Link>
                   )}
                   <Link to="/wishlist" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-primary-foreground/60 hover:text-secondary">Wishlist</Link>
                 </div>
