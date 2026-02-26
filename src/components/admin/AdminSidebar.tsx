@@ -20,23 +20,32 @@ import {
 import { useState } from "react";
 import logo from "@/assets/logo.jpg";
 
-const adminItems = [
+const storeItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Products", url: "/admin/products", icon: Package },
-  { title: "Categories", url: "/admin/categories", icon: FolderTree },
+  { title: "Categories / Collections", url: "/admin/categories", icon: FolderTree },
   { title: "Inventory", url: "/admin/inventory", icon: Warehouse },
   { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
   { title: "Customers", url: "/admin/customers", icon: Users },
   { title: "Reviews", url: "/admin/reviews", icon: Star },
+];
+
+const marketingItems = [
   { title: "Discounts", url: "/admin/discounts", icon: Tag },
   { title: "Loyalty Points", url: "/admin/loyalty", icon: Gift },
   { title: "Referrals", url: "/admin/referrals", icon: UserPlus },
   { title: "Blog", url: "/admin/blog", icon: FileText },
-  { title: "FAQ", url: "/admin/faq", icon: HelpCircle },
-  { title: "Policies", url: "/admin/policies", icon: FileCheck },
-  { title: "Homepage Editor", url: "/admin/homepage", icon: Palette },
   { title: "SEO Manager", url: "/admin/seo", icon: Search },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
+];
+
+const contentItems = [
+  { title: "Pages & Content", url: "/admin/homepage", icon: Palette },
+  { title: "FAQ", url: "/admin/faq", icon: HelpCircle },
+  { title: "Policies", url: "/admin/policies", icon: FileCheck },
+];
+
+const systemItems = [
   { title: "Audit Log", url: "/admin/audit-log", icon: ClipboardList },
 ];
 
@@ -46,7 +55,6 @@ const superAdminItems = [
   { title: "Site Settings", url: "/admin/settings", icon: Settings },
   { title: "Loyalty Rules", url: "/admin/loyalty-rules", icon: BookOpen },
   { title: "Referral Rules", url: "/admin/referral-rules", icon: Link2 },
-  { title: "Discount Rules", url: "/admin/discount-rules", icon: Sliders },
   { title: "Integrations", url: "/admin/integrations", icon: Link2 },
   { title: "Global Controls", url: "/admin/global-controls", icon: Settings },
 ];
@@ -59,7 +67,7 @@ function CollapsibleGroup({
   accent = false,
 }: {
   label: string;
-  items: typeof adminItems;
+  items: typeof storeItems;
   collapsed: boolean;
   defaultOpen?: boolean;
   accent?: boolean;
@@ -129,7 +137,10 @@ export function AdminSidebar() {
           </NavLink>
         </div>
 
-        <CollapsibleGroup label="Store Management" items={adminItems} collapsed={collapsed} />
+        <CollapsibleGroup label="Store Management" items={storeItems} collapsed={collapsed} />
+        <CollapsibleGroup label="Marketing & Growth" items={marketingItems} collapsed={collapsed} />
+        <CollapsibleGroup label="Content & Support" items={contentItems} collapsed={collapsed} />
+        <CollapsibleGroup label="System" items={systemItems} collapsed={collapsed} />
 
         {isSuperAdmin && (
           <CollapsibleGroup
