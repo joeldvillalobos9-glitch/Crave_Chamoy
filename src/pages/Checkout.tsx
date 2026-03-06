@@ -21,6 +21,7 @@ import {
   type CheckoutForm,
   type SimulatedPaymentResult,
 } from "@/hooks/useCheckout";
+import { useAvailableReferralReward } from "@/hooks/useReferrals";
 import { ShoppingBag, CreditCard, Truck, Gift, ArrowLeft, Star } from "lucide-react";
 
 const AddressFields = ({
@@ -69,14 +70,18 @@ const Checkout = () => {
     subtotal,
     shippingCost,
     loyaltyDiscount,
+    referralDiscount,
     orderTotal,
     pointsEarned,
     pointsToRedeem,
     setPointsToRedeem,
     maxRedeemableByOrder,
+    useReferralReward,
+    setUseReferralReward,
   } = useCheckout();
 
   const { data: loyaltyBalance = 0 } = useCustomerLoyaltyBalance(user?.id);
+  const { data: referralReward } = useAvailableReferralReward(user?.id);
 
   const [form, setForm] = useState<CheckoutForm>(defaultCheckoutForm);
   const [paymentResult, setPaymentResult] = useState<SimulatedPaymentResult>("success");
@@ -127,7 +132,7 @@ const Checkout = () => {
 
   const handlePlaceOrder = () => {
     createOrder.mutate(
-      { form, paymentResult, redeemPoints: pointsToRedeem },
+      { form, paymentResult, redeemPoints: pointsToRedeem, applyReferralReward: useReferralReward },
       {
         onSuccess: (order) => {
           navigate(`/order-confirmation/${order.id}`);
@@ -305,18 +310,42 @@ const Checkout = () => {
                 </CardContent>
               </Card>
 
-              {/* Referral Rewards Placeholder */}
-              <Card className="border-dashed border-2 border-muted-foreground/20">
+              {/* Referral Rewards */}
+              <Card className={user && referralReward ? "border-accent/30 bg-accent/5" : "border-dashed border-2 border-muted-foreground/20"}>
                 <CardContent className="py-6">
-                  <div className="flex items-center gap-3 text-muted-foreground">
+                  <div className="flex items-center gap-3 mb-2">
                     <span className="text-2xl">🎁</span>
                     <div>
                       <p className="font-display font-semibold text-foreground">Referral Rewards</p>
-                      <p className="text-sm font-body">
-                        Referral reward redemption coming soon!
-                      </p>
+                      {!user ? (
+                        <p className="text-sm font-body text-muted-foreground">
+                          <Link to="/auth" className="text-primary underline">Sign in</Link> to use referral rewards!
+                        </p>
+                      ) : !referralReward ? (
+                        <p className="text-sm font-body text-muted-foreground">
+                          No referral rewards available. Share your code to earn $10!
+                        </p>
+                      ) : (
+                        <p className="text-sm font-body text-muted-foreground">
+                          You have <span className="text-accent font-bold">{referralReward.available} referral reward{referralReward.available > 1 ? "s" : ""}</span>{" "}
+                          (${referralReward.amount.toFixed(2)} each)
+                        </p>
+                      )}
                     </div>
                   </div>
+
+                  {user && referralReward && (
+                    <div className="mt-3 flex items-center gap-3">
+                      <Checkbox
+                        id="use-referral"
+                        checked={useReferralReward}
+                        onCheckedChange={(c) => setUseReferralReward(!!c)}
+                      />
+                      <Label htmlFor="use-referral" className="cursor-pointer text-sm font-body">
+                        Apply ${referralReward.amount.toFixed(2)} referral reward to this order
+                      </Label>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -396,6 +425,12 @@ const Checkout = () => {
                     <div className="flex justify-between text-primary">
                       <span>🌟 Chamoy Points</span>
                       <span>-${loyaltyDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {referralDiscount > 0 && (
+                    <div className="flex justify-between text-accent">
+                      <span>🎁 Referral Reward</span>
+                      <span>-${referralDiscount.toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">

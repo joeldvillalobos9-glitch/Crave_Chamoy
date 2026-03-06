@@ -126,6 +126,12 @@ const OrderConfirmation = () => {
                     <span>-${Number(order.discount_amount).toFixed(2)}</span>
                   </div>
                 )}
+                {order.referral_reward_used && Number(order.referral_discount) > 0 && (
+                  <div className="flex justify-between text-accent">
+                    <span>🎁 Referral Reward</span>
+                    <span>-${Number(order.referral_discount).toFixed(2)}</span>
+                  </div>
+                )}
                 <Separator />
                 <div className="flex justify-between font-display font-bold text-base">
                   <span className="text-foreground">Total</span>
@@ -133,7 +139,7 @@ const OrderConfirmation = () => {
                 </div>
               </div>
 
-              {order.status === "confirmed" && (Number(order.loyalty_points_earned) > 0 || Number(order.loyalty_points_redeemed) > 0) && (
+              {order.status === "confirmed" && (Number(order.loyalty_points_earned) > 0 || Number(order.loyalty_points_redeemed) > 0 || order.referral_triggered) && (
                 <>
                   <Separator />
                   <div className="space-y-1 text-sm font-body text-center">
@@ -145,6 +151,11 @@ const OrderConfirmation = () => {
                     {Number(order.loyalty_points_earned) > 0 && (
                       <p className="text-primary font-semibold">
                         🌟 Earned {order.loyalty_points_earned} Chamoy Points!
+                      </p>
+                    )}
+                    {order.referral_triggered && (
+                      <p className="text-accent font-semibold">
+                        🎁 Referral rewards unlocked! You and your friend each earned $10 off!
                       </p>
                     )}
                   </div>
