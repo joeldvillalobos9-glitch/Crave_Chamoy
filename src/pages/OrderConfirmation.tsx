@@ -133,12 +133,21 @@ const OrderConfirmation = () => {
                 </div>
               </div>
 
-              {order.status === "confirmed" && Number(order.loyalty_points_earned) > 0 && (
+              {order.status === "confirmed" && (Number(order.loyalty_points_earned) > 0 || Number(order.loyalty_points_redeemed) > 0) && (
                 <>
                   <Separator />
-                  <p className="text-sm text-primary font-body font-semibold text-center">
-                    🌟 You earned {order.loyalty_points_earned} Chamoy Points!
-                  </p>
+                  <div className="space-y-1 text-sm font-body text-center">
+                    {Number(order.loyalty_points_redeemed) > 0 && (
+                      <p className="text-primary font-semibold">
+                        🎉 Redeemed {order.loyalty_points_redeemed} points (-${Number(order.loyalty_discount).toFixed(2)})
+                      </p>
+                    )}
+                    {Number(order.loyalty_points_earned) > 0 && (
+                      <p className="text-primary font-semibold">
+                        🌟 Earned {order.loyalty_points_earned} Chamoy Points!
+                      </p>
+                    )}
+                  </div>
                 </>
               )}
             </CardContent>

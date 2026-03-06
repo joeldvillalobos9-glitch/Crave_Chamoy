@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -50,25 +50,55 @@ export const defaultCheckoutForm: CheckoutForm = {
 
 export type SimulatedPaymentResult = "success" | "failure" | "canceled";
 
+// Loyalty constants
+export const POINTS_PER_DOLLAR = 10;
+export const POINTS_PER_DOLLAR_OFF = 100;
+
+export function useCustomerLoyaltyBalance(customerId: string | undefined) {
+  return useQuery({
+    queryKey: ["customer-loyalty-balance", customerId],
+    enabled: !!customerId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("loyalty_ledger")
+        .select("balance_after")
+        .eq("customer_id", customerId!)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      return data && data.length > 0 ? Math.max(0, data[0].balance_after) : 0;
+    },
+  });
+}
+
 export function useCheckout() {
   const { items, total, clearCart } = useCart();
   const { user } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [lastOrderId, setLastOrderId] = useState<string | null>(null);
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
 
   const shippingCost = total >= 35 ? 0 : 4.99;
   const subtotal = total;
-  const orderTotal = subtotal + shippingCost;
-  const pointsEarned = Math.floor(orderTotal * 10);
+
+  // Loyalty discount from redeemed points
+  const loyaltyDiscount = Math.floor(pointsToRedeem) / POINTS_PER_DOLLAR_OFF;
+  const orderTotal = Math.max(0, subtotal + shippingCost - loyaltyDiscount);
+  const pointsEarned = Math.floor(orderTotal * POINTS_PER_DOLLAR);
+
+  // Max redeemable: can't reduce order below $0
+  const maxRedeemableByOrder = Math.floor((subtotal + shippingCost) * POINTS_PER_DOLLAR_OFF);
 
   const createOrderMutation = useMutation({
     mutationFn: async ({
       form,
       paymentResult,
+      redeemPoints,
     }: {
       form: CheckoutForm;
       paymentResult: SimulatedPaymentResult;
+      redeemPoints: number;
     }) => {
       const orderNumber = "CC-" + String(Math.floor(Math.random() * 999999)).padStart(6, "0");
 
@@ -92,6 +122,12 @@ export function useCheckout() {
           : "pending"
       ) as "confirmed" | "canceled" | "pending";
 
+      const isSuccess = paymentResult === "success";
+      const actualLoyaltyDiscount = isSuccess ? loyaltyDiscount : 0;
+      const actualPointsRedeemed = isSuccess ? redeemPoints : 0;
+      const actualPointsEarned = isSuccess ? pointsEarned : 0;
+      const actualTotal = isSuccess ? orderTotal : subtotal + shippingCost;
+
       const orderData = {
         order_number: orderNumber,
         customer_id: user?.id || null,
@@ -104,14 +140,16 @@ export function useCheckout() {
         subtotal,
         shipping_cost: shippingCost,
         tax_amount: 0,
-        discount_amount: 0,
-        total: orderTotal,
+        discount_amount: actualLoyaltyDiscount,
+        total: actualTotal,
         item_count: items.reduce((s, i) => s + i.quantity, 0),
         status: orderStatus,
         payment_status: paymentStatus,
         fulfillment_status: "unfulfilled" as const,
         payment_method: "test_simulation",
-        loyalty_points_earned: paymentResult === "success" ? pointsEarned : 0,
+        loyalty_points_earned: actualPointsEarned,
+        loyalty_points_redeemed: actualPointsRedeemed,
+        loyalty_discount: actualLoyaltyDiscount,
       };
 
       const { data: order, error } = await supabase
@@ -121,6 +159,7 @@ export function useCheckout() {
         .single();
       if (error) throw error;
 
+      // Insert order items
       const orderItems = items.map((item) => ({
         order_id: order.id,
         product_id: null as string | null,
@@ -138,11 +177,51 @@ export function useCheckout() {
         .insert(orderItems);
       if (itemsError) throw itemsError;
 
+      // Loyalty ledger entries for successful orders only
+      if (isSuccess && user?.id) {
+        // Get current balance
+        const { data: lastEntry } = await supabase
+          .from("loyalty_ledger")
+          .select("balance_after")
+          .eq("customer_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        let currentBalance = lastEntry && lastEntry.length > 0 ? lastEntry[0].balance_after : 0;
+
+        // Redeem points first (debit)
+        if (actualPointsRedeemed > 0) {
+          const newBalance = currentBalance - actualPointsRedeemed;
+          await supabase.from("loyalty_ledger").insert({
+            customer_id: user.id,
+            points: -actualPointsRedeemed,
+            balance_after: newBalance,
+            type: "redeemed",
+            description: `Redeemed ${actualPointsRedeemed} points ($${actualLoyaltyDiscount.toFixed(2)} off) on order ${orderNumber}`,
+            order_id: order.id,
+          });
+          currentBalance = newBalance;
+        }
+
+        // Earn points (credit)
+        if (actualPointsEarned > 0) {
+          const newBalance = currentBalance + actualPointsEarned;
+          await supabase.from("loyalty_ledger").insert({
+            customer_id: user.id,
+            points: actualPointsEarned,
+            balance_after: newBalance,
+            type: "earned",
+            description: `Earned ${actualPointsEarned} points from order ${orderNumber} ($${actualTotal.toFixed(2)})`,
+            order_id: order.id,
+          });
+        }
+      }
+
       // Log activity
       await supabase.from("order_activity").insert({
         order_id: order.id,
         action: "order_created",
-        details: `Order ${orderNumber} created via checkout (payment: ${paymentResult})`,
+        details: `Order ${orderNumber} created via checkout (payment: ${paymentResult})${actualPointsRedeemed > 0 ? ` — redeemed ${actualPointsRedeemed} pts` : ""}${actualPointsEarned > 0 ? ` — earned ${actualPointsEarned} pts` : ""}`,
         actor_id: user?.id || null,
         actor_name: form.customerName,
       });
@@ -151,8 +230,12 @@ export function useCheckout() {
     },
     onSuccess: (order) => {
       setLastOrderId(order.id);
+      setPointsToRedeem(0);
       clearCart();
       qc.invalidateQueries({ queryKey: ["admin-orders"] });
+      qc.invalidateQueries({ queryKey: ["admin-loyalty-stats"] });
+      qc.invalidateQueries({ queryKey: ["admin-loyalty-activity"] });
+      qc.invalidateQueries({ queryKey: ["customer-loyalty-balance"] });
       toast({ title: "Order placed! 🎉", description: `Order ${order.order_number} created.` });
     },
     onError: (e: any) => {
@@ -165,8 +248,12 @@ export function useCheckout() {
     lastOrderId,
     subtotal,
     shippingCost,
+    loyaltyDiscount,
     orderTotal,
     pointsEarned,
+    pointsToRedeem,
+    setPointsToRedeem,
+    maxRedeemableByOrder,
     items,
   };
 }
