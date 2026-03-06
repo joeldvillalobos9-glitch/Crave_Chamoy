@@ -9,16 +9,16 @@ import { CheckCircle, XCircle, AlertCircle, Package, ArrowLeft } from "lucide-re
 
 const statusDisplay: Record<string, { icon: React.ReactNode; title: string; desc: string; color: string }> = {
   confirmed: {
-    icon: <CheckCircle size={48} className="text-green-600" />,
+    icon: <CheckCircle size={48} className="text-primary" />,
     title: "Order Confirmed! 🎉",
     desc: "Your chamoy goodies are on their way soon!",
-    color: "text-green-600",
+    color: "text-primary",
   },
   pending: {
-    icon: <AlertCircle size={48} className="text-yellow-600" />,
+    icon: <AlertCircle size={48} className="text-secondary" />,
     title: "Order Pending",
     desc: "Payment could not be processed. Please try again or contact support.",
-    color: "text-yellow-600",
+    color: "text-secondary",
   },
   canceled: {
     icon: <XCircle size={48} className="text-destructive" />,

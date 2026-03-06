@@ -114,7 +114,7 @@ export function useCheckout() {
 
       const { data: order, error } = await supabase
         .from("orders")
-        .insert(orderData)
+        .insert([orderData])
         .select()
         .single();
       if (error) throw error;
