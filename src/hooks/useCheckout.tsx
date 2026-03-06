@@ -76,19 +76,21 @@ export function useCheckout() {
         ? form.shippingAddress
         : form.billingAddress;
 
-      const paymentStatus =
+      const paymentStatus = (
         paymentResult === "success"
           ? "paid"
           : paymentResult === "failure"
           ? "failed"
-          : "unpaid";
+          : "unpaid"
+      ) as "paid" | "failed" | "unpaid";
 
-      const orderStatus =
+      const orderStatus = (
         paymentResult === "success"
           ? "confirmed"
           : paymentResult === "canceled"
           ? "canceled"
-          : "pending";
+          : "pending"
+      ) as "confirmed" | "canceled" | "pending";
 
       const orderData = {
         order_number: orderNumber,
