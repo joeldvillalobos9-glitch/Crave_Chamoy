@@ -92,8 +92,10 @@ const Cart = () => {
                   🌟 You'll earn {Math.floor(total * 10)} Chamoy Points!
                 </p>
 
-                <Button variant="hero" size="xl" className="w-full mb-3">
-                  <ShoppingBag size={20} /> Checkout
+                <Button variant="hero" size="xl" className="w-full mb-3" asChild>
+                  <Link to="/checkout">
+                    <ShoppingBag size={20} /> Checkout
+                  </Link>
                 </Button>
                 <Button variant="outline" size="lg" className="w-full" asChild>
                   <Link to="/shop">Continue Shopping</Link>
